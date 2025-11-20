@@ -1,4 +1,6 @@
 #https://cage-challenge.github.io/cage-challenge-4/pages/tutorials/02_Looking_Around/1_Observations/#active-agents
+# to run: venv/bin/python -m Learning.active_agents
+
 from pprint import pprint
 
 from CybORG import CybORG
