@@ -7,6 +7,11 @@ from CybORG import CybORG
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
 
+
+print("-"*50)
+print("Active Agents")
+print("-"*50)
+
 steps = 200
 sg = EnterpriseScenarioGenerator(blue_agent_class=SleepAgent, 
                                 green_agent_class=EnterpriseGreenAgent, 
