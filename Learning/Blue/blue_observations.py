@@ -1,5 +1,8 @@
 #https://cage-challenge.github.io/cage-challenge-4/pages/tutorials/02_Looking_Around/1_Observations/#blue-observations
-# to run: venv/bin/python -m Learning.blue_observations
+# mac: venv/bin/python -m Learning.Blue.blue_observations
+# windows: .\venv\Scripts\python -m Learning.Blue.blue_observations
+
+
 from pprint import pprint
 from CybORG import CybORG
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
