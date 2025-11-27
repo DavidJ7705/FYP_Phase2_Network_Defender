@@ -1,5 +1,7 @@
 #https://cage-challenge.github.io/cage-challenge-4/pages/tutorials/01_Getting_Started/2_Getting_Started/
-# to run: venv/bin/python -m Learning.tutorial_getting_started
+# mac: venv/bin/python -m Learning.tutorial_getting_started
+# windows: .\venv\Scripts\python -m Learning.tutorial_getting_started
+
 
 from CybORG import CybORG
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
