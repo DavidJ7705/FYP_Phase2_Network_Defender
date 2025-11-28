@@ -10,6 +10,10 @@ from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents import SleepAgent, FiniteStateRedAgent, EnterpriseGreenAgent
 from CybORG.Simulator.Actions import Monitor
 
+print("-"*50)
+print("CybORG CAGE Challenge 4 - Blue Monitor Action on Green Agent")
+print("-"*50)
+
 steps = 200
 sg = EnterpriseScenarioGenerator(blue_agent_class = SleepAgent,
                                 green_agent_class = EnterpriseGreenAgent,
