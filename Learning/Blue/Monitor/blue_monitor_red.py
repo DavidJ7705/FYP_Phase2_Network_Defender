@@ -1,9 +1,7 @@
 #https://cage-challenge.github.io/cage-challenge-4/pages/tutorials/03_Actions/B_Blue_Actions/1_Monitor/
-# mac: venv/bin/python -m Learning.Blue.blue_monitor
-# windows: .\venv\Scripts\python -m Learning.Blue.blue_monitor
+# mac: venv/bin/python -m Learning.Blue.Monitor.blue_monitor_red
+# windows: .\venv\Scripts\python -m Learning.Blue.Monitor.blue_monitor_red
 
-
-from CybORG.Tests.test_cc4.test_BlueEnterpriseWrapper import blue_agent_short
 from pprint import pprint
 
 from CybORG import CybORG
@@ -22,18 +20,12 @@ cyborg = CybORG(scenario_generator=sg, seed = 1000)
 blue_agent_name = 'blue_agent_0'
 
 reset = cyborg.reset(agent = blue_agent_name)
-initial_obs = reset.observation
-
-# pprint(initial_obs.keys())
 
 action = Monitor(0, blue_agent_name)
 results = cyborg.step(agent=blue_agent_name, action = action)
 
 step = 1
 base_obs = results.observation
-
-# print(f"step count: {step}")
-# pprint(base_obs)
 
 new_obs = base_obs
 
