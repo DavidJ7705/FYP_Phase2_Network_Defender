@@ -1,6 +1,6 @@
 #https://cage-challenge.github.io/cage-challenge-4/pages/tutorials/03_Actions/A_Understanding_Actions/4_Invalid_Actions/
-# mac: venv/bin/python -m Learning.UnderstandingActions.invalid_actions
-# windows: .\venv\Scripts\python -m Learning.UnderstandingActions.invalid_actions
+# mac: venv/bin/python -m Learning.UnderstandingActions.valid_actions
+# windows: .\venv\Scripts\python -m Learning.UnderstandingActions.valid_actions
 
 from pprint import pprint
 
@@ -22,10 +22,10 @@ cyborg.reset()
 example_agent_name = 'blue_agent_0'
 example_action_space = cyborg.get_action_space(example_agent_name)
 
-unknown_hostnames = [hn for hn, known in example_action_space['hostname'].items() if not known]
-unknown_hostname = unknown_hostnames[0]
+known_hostnames = [hn for hn, known in example_action_space['hostname'].items() if known]
+target_hostname = known_hostnames[0]
 
-example_action = Analyse(0, example_agent_name, unknown_hostname)
+example_action = Analyse(0, example_agent_name, target_hostname)
 
 results = cyborg.step(agent = example_agent_name, action = example_action)
 
