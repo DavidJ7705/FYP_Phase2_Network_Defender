@@ -12,27 +12,22 @@ from CybORG.Simulator.Actions import Monitor
 
 steps = 200
 sg = EnterpriseScenarioGenerator(blue_agent_class = SleepAgent,
-                                green_agent_class = SleepAgent,
-                                red_agent_class = FiniteStateRedAgent,
+                                green_agent_class = EnterpriseGreenAgent,
+                                red_agent_class = SleepAgent,
                                 steps = steps
                                 )
 
 cyborg = CybORG(scenario_generator=sg, seed = 1000)
+cyborg.reset()
+
 blue_agent_name = 'blue_agent_0'
-
-reset = cyborg.reset(agent = blue_agent_name)
-initial_obs = reset.observation
-
-# pprint(initial_obs.keys())
+blue_action_space = cyborg.get_action_space(blue_agent_name)
 
 action = Monitor(0, blue_agent_name)
 results = cyborg.step(agent=blue_agent_name, action = action)
 
 step = 1
 base_obs = results.observation
-
-# print(f"step count: {step}")
-# pprint(base_obs)
 
 new_obs = base_obs
 
