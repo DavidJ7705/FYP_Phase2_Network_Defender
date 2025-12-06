@@ -53,4 +53,5 @@ for agent_name, ai in cyborg.environment_controller.agent_interfaces.items():
 obs_2 = cyborg.step(agent='blue_agent_0', action=Sleep()).observation
 
 print("\nBlue Agent 0: Step #2 with Green False Positive \n")
-pprint(obs_2)
+# pprint(obs_2)
+pprint(obs_2.keys())

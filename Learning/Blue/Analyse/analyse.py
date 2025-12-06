@@ -10,7 +10,7 @@ from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents import SleepAgent, FiniteStateRedAgent, EnterpriseGreenAgent
 from CybORG.Simulator.Actions import Analyse
 
-steps = 200
+steps = 1000
 sg = EnterpriseScenarioGenerator(blue_agent_class = SleepAgent,
                                 green_agent_class = EnterpriseGreenAgent,
                                 red_agent_class = FiniteStateRedAgent,
@@ -30,3 +30,13 @@ print("step 1:",results.observation)
 results = cyborg.step(agent = blue_agent_name)
 print("step 2:",results.observation)
 
+step = 2
+while step < steps:
+    results = cyborg.step(agent = blue_agent_name, action = action)
+    step = step+1
+    new_obs = results.observation
+    
+                    
+
+pprint("Step: " + str(step) + " : " + str(new_obs))
+# pprint(new_obs)
