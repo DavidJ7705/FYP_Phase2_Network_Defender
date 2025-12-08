@@ -10,6 +10,7 @@ from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents.SimpleAgents.ConstantAgent import SleepAgent
 from CybORG.Simulator.Actions.AbstractActions.Analyse import Analyse
 from CybORG.Simulator.Actions.ConcreteActions.DecoyActions.DeployDecoy import DeployDecoy
+from CybORG.Simulator.Actions.AbstractActions.DiscoverNetworkServices import StealthServiceDiscovery
 from Learning.Blue.DeployDecoy.root_shell_func import cyborg_with_root_shell_on_cns0
 
 cyborg = cyborg_with_root_shell_on_cns0()
@@ -32,3 +33,17 @@ print("Blue:")
 print(obs[blue_agent_name])
 print("\n")
 
+red_agent_name = 'red_agent_0'
+
+red_action = StealthServiceDiscovery(session=0, agent=red_agent_name, ip_address=target_ip)
+red_action.duration = 1
+red_action.detection_rate = 0
+obs, _, _, _ = cyborg.parallel_step(actions={red_agent_name: red_action})
+
+print("StealthServiceDiscovery:")
+print("Red:")
+pprint(obs[red_agent_name])
+print("\n")
+print("Blue:")
+pprint(obs[blue_agent_name])
+print("\n")
