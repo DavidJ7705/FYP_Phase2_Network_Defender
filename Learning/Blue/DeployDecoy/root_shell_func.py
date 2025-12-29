@@ -1,4 +1,5 @@
 from CybORG import CybORG
+from pprint import pprint
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents import SleepAgent
 from CybORG.Simulator.Actions import DiscoverRemoteSystems, AggressiveServiceDiscovery, ExploitRemoteService, PrivilegeEscalate, Sleep
@@ -46,13 +47,19 @@ def cyborg_with_root_shell_on_cns0() -> CybORG:
 
     action = ExploitRemoteService(ip_address=s0_ip_addr, session=0, agent=red_agent_name[0])
     action.duration = 1
-    results = cyborg.step(agent=red_agent_name[0], action=Sleep())
+    results = cyborg.step(agent=red_agent_name[0], action=action)
     obs = results.observation
     print(obs['action'], obs['success'])
 
     action = PrivilegeEscalate(hostname=s0_hostname, session=0, agent=red_agent_name[0])
     results = cyborg.step(agent=red_agent_name[0], action=action)
     obs = results.observation
-    print(obs['action'], obs['success'])
+    pprint(obs)
+    while obs['success'].name == 'IN_PROGRESS':
+        results = cyborg.step(agent=red_agent_name[0], action=Sleep())
+        obs = results.observation
+        pprint(obs)
+
+    print(obs.get('action'), obs['success'])
 
     return cyborg

@@ -11,6 +11,7 @@ from CybORG.Agents.SimpleAgents.ConstantAgent import SleepAgent
 from CybORG.Simulator.Actions.AbstractActions.Analyse import Analyse
 from CybORG.Simulator.Actions.ConcreteActions.DecoyActions.DeployDecoy import DeployDecoy
 from CybORG.Simulator.Actions.AbstractActions.DiscoverNetworkServices import StealthServiceDiscovery
+from CybORG.Simulator.Actions.AbstractActions.ExploitRemoteService import ExploitRemoteService
 from Learning.Blue.DeployDecoy.root_shell_func import cyborg_with_root_shell_on_cns0
 
 cyborg = cyborg_with_root_shell_on_cns0()
@@ -25,7 +26,6 @@ cyborg.environment_controller.state.hosts[target_host].services = {}
 
 action = DeployDecoy(session = 0, agent = blue_agent_name, hostname = target_host)
 action.duration = 1
-
 obs, _, _, _, = cyborg.parallel_step(actions = {blue_agent_name: action})
 
 print("deployed decoy")
@@ -46,4 +46,16 @@ pprint(obs[red_agent_name])
 print("\n")
 print("Blue:")
 pprint(obs[blue_agent_name])
+print("\n")
+
+action_2 = ExploitRemoteService(ip_address=target_ip, session=0, agent=red_agent_name)
+action_2.duration = 1
+obs_2, _, _, _ = cyborg.parallel_step(actions={red_agent_name: action_2})
+
+print("ExploitRemoteService:")
+print("Red:")
+pprint(obs_2[red_agent_name])
+print("\n")
+print("Blue:")
+pprint(obs_2[blue_agent_name])
 print("\n")
