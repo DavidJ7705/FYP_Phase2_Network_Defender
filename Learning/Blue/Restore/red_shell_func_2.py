@@ -36,7 +36,7 @@ def get_shell_on_rzas0(cyborg:CybORG, shell_type:str = 'root'):
 
     # Red privilege escalates restricted_zone_a_subnet_server_host_0 to gain a user shell
     red_action = PrivilegeEscalate(hostname=target_host, session=0, agent=red_agent_name[1])
-    action.duration = 1
+    red_action.duration = 1
     results = cyborg.step(agent=red_agent_name[1], action=red_action)
     obs = results.observation
     print(obs['action'], obs['success'])
