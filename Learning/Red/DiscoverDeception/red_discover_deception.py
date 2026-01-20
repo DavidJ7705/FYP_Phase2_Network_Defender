@@ -20,3 +20,10 @@ red_agent_name = 'red_agent_0'
 reset = cyborg.reset(agent=red_agent_name)
 initial_obs = reset.observation
 pprint(initial_obs)
+
+print("*" * 50)
+
+action = DiscoverRemoteSystems(subnet=IPv4Network('10.0.96.0/24'), session=0, agent=red_agent_name)
+results = cyborg.step(agent=red_agent_name, action=action)
+obs = results.observation
+pprint(obs)
