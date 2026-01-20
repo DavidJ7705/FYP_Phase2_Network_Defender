@@ -27,3 +27,10 @@ action = DiscoverRemoteSystems(subnet=IPv4Network('10.0.96.0/24'), session=0, ag
 results = cyborg.step(agent=red_agent_name, action=action)
 obs = results.observation
 pprint(obs)
+
+print("*" * 50)
+action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.177'))
+cyborg.step(agent=red_agent_name, action=action)
+
+action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.108'))
+cyborg.step(agent=red_agent_name, action=action)
