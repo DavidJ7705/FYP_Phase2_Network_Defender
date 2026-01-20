@@ -10,6 +10,8 @@ from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 from CybORG.Agents import SleepAgent, FiniteStateRedAgent, EnterpriseGreenAgent
 from CybORG.Simulator.Actions import PrivilegeEscalate
 
+from CybORG.Simulator.Actions import Sleep
+
 sg = EnterpriseScenarioGenerator(blue_agent_class=SleepAgent, 
                                 green_agent_class=EnterpriseGreenAgent, 
                                 red_agent_class=FiniteStateRedAgent,
@@ -21,4 +23,11 @@ reset = cyborg.reset(agent=red_agent_name)
 initial_obs = reset.observation
 pprint(initial_obs)
 
-print("*" * 50)
+print("After Privilege Escalate")
+
+
+action = PrivilegeEscalate(hostname='contractor_network_subnet_user_host_4', session=0, agent=red_agent_name)
+results = cyborg.step(agent=red_agent_name, action=action)
+results = cyborg.step(agent=red_agent_name, action=Sleep())
+obs = results.observation
+pprint(obs)
