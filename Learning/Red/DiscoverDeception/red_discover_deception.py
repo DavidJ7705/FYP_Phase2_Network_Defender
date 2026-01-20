@@ -34,3 +34,31 @@ cyborg.step(agent=red_agent_name, action=action)
 
 action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.108'))
 cyborg.step(agent=red_agent_name, action=action)
+
+
+'''
+print("*" * 50)
+action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.177'))
+obs_1 = cyborg.step(agent=red_agent_name, action=action)
+pprint(obs_1.observation)
+
+print("*" * 50)
+action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.108'))
+obs_2 = cyborg.step(agent=red_agent_name, action=action)
+pprint(obs_2.observation)
+
+'''
+
+print("Host 1: ")
+action = DiscoverDeception(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.177'))
+cyborg.step(agent=red_agent_name, action=action)
+results = cyborg.step(agent=red_agent_name, action=Sleep())
+obs = results.observation
+pprint(obs)
+
+print("Host 2: ")
+action = DiscoverDeception(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.108'))
+cyborg.step(agent=red_agent_name, action=action)
+results = cyborg.step(agent=red_agent_name, action=Sleep())
+obs = results.observation
+pprint(obs)
