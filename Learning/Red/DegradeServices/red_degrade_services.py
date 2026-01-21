@@ -2,9 +2,6 @@
 # mac: venv/bin/python -m Learning.Red.DegradeServices.red_degrade_services
 # windows: .\venv\Scripts\python -m Learning.Red.DegradeServices.red_degrade_services
 
-print("*" *50)
-print("Initial Observation")
-
 from pprint import pprint
 from ipaddress import IPv4Network, IPv4Address
 
@@ -21,44 +18,39 @@ sg = EnterpriseScenarioGenerator(blue_agent_class=SleepAgent,
 cyborg = CybORG(scenario_generator=sg, seed=1000)
 red_agent_name = 'red_agent_0'
 
+print("*" *50)
+print("Initial Observation")
 reset = cyborg.reset(agent=red_agent_name)
-initial_obs = reset.observation
-pprint(initial_obs)
 
 print("*" *50)
 print("Discover Remote Systems")
-
 action = DiscoverRemoteSystems(subnet=IPv4Network('10.0.96.0/24'), session=0, agent=red_agent_name)
-results = cyborg.step(agent=red_agent_name, action=action)
-obs = results.observation
-pprint(obs)
+cyborg.step(agent=red_agent_name, action=action)
 
 print("*" *50)
 print("Service Discovery")
-
 action = AggressiveServiceDiscovery(session=0, agent=red_agent_name, ip_address=IPv4Address('10.0.96.108'))
-results = cyborg.step(agent=red_agent_name, action=action)
-obs = results.observation
-pprint(obs)
-
+cyborg.step(agent=red_agent_name, action=action)
 
 print("*" *50)
 print("Exploit Service")
-
 action = ExploitRemoteService(ip_address=IPv4Address('10.0.96.108'), session=0, agent=red_agent_name)
 cyborg.step(agent=red_agent_name, action=action)
 cyborg.step(agent=red_agent_name, action=Sleep())
-results = cyborg.step(agent=red_agent_name, action=Sleep())
-obs = results.observation
-pprint(obs)
-
+cyborg.step(agent=red_agent_name, action=Sleep())
+cyborg.step(agent=red_agent_name, action=Sleep())
 
 print("*" *50)
 print("Privilege Escalate Shell")
-
-action = PrivilegeEscalate(hostname='contractor_network_subnet_user_host_5', session=0, agent=red_agent_name)
+action = PrivilegeEscalate(hostname='contractor_network_subnet_user_host_4', session=0, agent=red_agent_name)
 cyborg.step(agent=red_agent_name, action=action)
-
+cyborg.step(agent=red_agent_name, action=Sleep())
 
 print("*" *50)
 print("Degrade Service")
+action = DegradeServices(hostname='contractor_network_subnet_user_host_4', session=0, agent=red_agent_name)
+results = cyborg.step(agent=red_agent_name, action=action)
+
+results = cyborg.step(agent=red_agent_name, action=Sleep())
+obs = results.observation
+pprint(obs)
