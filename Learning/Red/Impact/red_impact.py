@@ -49,3 +49,9 @@ cyborg.step(agent=red_agent_name, action=Sleep())
 
 print("*" *50)
 print("Impact")
+action = Impact(hostname='contractor_network_subnet_server_host_0', session=1, agent='red_agent_0')
+cyborg.step(agent='red_agent_0', action=action)
+
+results = cyborg.step(agent=red_agent_name, action=Sleep())
+obs = results.observation
+pprint(obs)
