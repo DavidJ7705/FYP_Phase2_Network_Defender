@@ -19,7 +19,7 @@ def env_creator_CC4(env_config: dict):
         blue_agent_class=SleepAgent,
         green_agent_class=EnterpriseGreenAgent,
         red_agent_class=FiniteStateRedAgent,
-        steps=100
+        steps=10
     )
     cyborg = CybORG(scenario_generator=sg)
     env = EnterpriseMAE(env=cyborg)
@@ -29,7 +29,7 @@ register_env(name="CC4", env_creator=lambda config: env_creator_CC4(config))
 env = env_creator_CC4({})
 
 
-NUM_AGENTS = 3
+NUM_AGENTS = 5
 POLICY_MAP = {f"blue_agent_{i}": f"Agent{i}" for i in range(NUM_AGENTS)}
 
 def policy_mapper(agent_id, episode, worker, **kwargs):
@@ -55,7 +55,7 @@ algo_config = (
 
 algo = algo_config.build()
 
-for i in range(50):
+for i in range(5):
     train_info=algo.train()
 
 algo.save("results")
