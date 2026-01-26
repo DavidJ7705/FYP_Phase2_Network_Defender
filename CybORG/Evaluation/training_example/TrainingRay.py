@@ -17,7 +17,7 @@ from ray.rllib.env import MultiAgentEnv
 from ray.rllib.algorithms.ppo import PPOConfig, PPO
 from ray.rllib.algorithms.dqn import DQNConfig, DQN
 from ray.rllib.policy.policy import PolicySpec
-from ray.rllib.utils import check_env
+
 from ray.tune import register_env
 
 import warnings
@@ -58,6 +58,8 @@ algo_config = (
     # .debugging(seed=0, log_level="ERROR")
     .debugging(logger_config={"logdir":"logs/DQN_Complicated_SleepRed", "type":"ray.tune.logger.TBXLogger"})
     .environment(env="CC4")
+    .api_stack(enable_rl_module_and_learner=False, enable_env_runner_and_connector_v2=False)
+    .training(replay_buffer_config={'type': 'MultiAgentPrioritizedReplayBuffer'})
     # .training(model={"fcnet_hiddens":[32:32]})``
     .multi_agent(
         policies={
@@ -73,14 +75,15 @@ algo_config = (
     )
 )
 
-check_env(env)
+# check_env(env)  # Removed - not available in this Ray version
 algo = algo_config.build()
 
-for i in range(1000):
+for i in range(10):  # Reduced from 1000 to 10 for testing
     train_info = algo.train()
+    print(f"Training iteration {i+1}/10 completed")
 
-#algo.save("experiment1a")
-#output = algo.evaluate()
+algo.save("experiment1a")
+output = algo.evaluate()
 
 print(output)
 print(
