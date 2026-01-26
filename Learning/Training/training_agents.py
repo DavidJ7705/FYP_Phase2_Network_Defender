@@ -19,7 +19,7 @@ def env_creator_CC4(env_config: dict):
         blue_agent_class=SleepAgent,
         green_agent_class=EnterpriseGreenAgent,
         red_agent_class=FiniteStateRedAgent,
-        steps=10
+        steps=1000
     )
     cyborg = CybORG(scenario_generator=sg)
     env = EnterpriseMAE(env=cyborg)
