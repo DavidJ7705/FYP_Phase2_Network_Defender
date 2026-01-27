@@ -1,0 +1,1 @@
+{"type": "Algorithm", "checkpoint_version": "1.1", "format": "cloudpickle", "state_file": "C:\\Users\\G00419108@atu.ie\\Desktop\\FYP_Phase2_Network_Defender\\experiment_200steps_best\\algorithm_state.pkl", "policy_ids": ["Agent0", "Agent1", "Agent4", "Agent3", "Agent2"], "ray_version": "2.38.0", "ray_commit": "385ee466260ef3cd218d5e372aef5d39338b7b94"}
