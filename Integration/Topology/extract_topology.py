@@ -1,0 +1,33 @@
+# mac: venv/bin/python -m Integration.Topology.extract_topology
+# windows: .\venv\Scripts\python -m Integration.Topology.extract_topology
+
+
+import sys
+import os
+
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+sys.path.insert(0, project_root)
+
+from CybORG import CybORG
+from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
+from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
+import json
+
+sg = EnterpriseScenarioGenerator(
+    blue_agent_class=SleepAgent,
+    green_agent_class=EnterpriseGreenAgent,
+    red_agent_class=FiniteStateRedAgent,
+    steps=200,
+)
+cyborg = CybORG(scenario_generator=sg, seed=42)
+
+state = cyborg.environment_controller.state
+
+print("="*60)
+print("CYBORG TOPOLOGY (seed=42)")
+print("="*60)
+
+print(f"\nOVERVIEW:")
+print(f"Total hosts: {len(state.hosts)}")
+print(f"Total subnets: {len(state.subnets)}")
+
