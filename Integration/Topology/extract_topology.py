@@ -34,3 +34,18 @@ print(f"Total subnets: {len(state.subnets)}")
 print(f"\nSUBNETS:")
 for index, subnet_id in enumerate(state.subnets.keys(), start=1):
     print(f"\t{index} - {subnet_id}")
+
+routers = [host for host in state.hosts.keys() if 'router' in host]
+servers = [host for host in state.hosts.keys() if 'server' in host]
+user_hosts = [host for host in state.hosts.keys() if 'user' in host]
+
+print(f"\nHOST TYPES:")
+print(f"  Routers: {len(routers)}")
+print(f"  Servers: {len(servers)}")
+print(f"  User hosts: {len(user_hosts)}")
+
+print(f"\nSAMPLE HOSTS:")
+print(f"  Routers: {routers[:3]}")
+print(f"  Servers: {servers[:5]}")
+print(f"  Users: {user_hosts[:5]}")
+
