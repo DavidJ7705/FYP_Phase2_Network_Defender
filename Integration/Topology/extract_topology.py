@@ -31,3 +31,6 @@ print(f"\nOVERVIEW:")
 print(f"Total hosts: {len(state.hosts)}")
 print(f"Total subnets: {len(state.subnets)}")
 
+print(f"\nSUBNETS:")
+for index, subnet_id in enumerate(state.subnets.keys(), start=1):
+    print(f"\t{index} - {subnet_id}")
