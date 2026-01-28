@@ -36,6 +36,7 @@ def env_creator_CC4(env_config: dict):
         green_agent_class=EnterpriseGreenAgent,
         red_agent_class=FiniteStateRedAgent,
         steps=200,  # Reduced to 200 steps - more manageable
+        seed = 42,
     )
     cyborg = CybORG(scenario_generator=sg)
     cyborg = EnterpriseMAE(cyborg)
