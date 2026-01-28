@@ -49,3 +49,18 @@ print(f"  Routers: {routers[:3]}")
 print(f"  Servers: {servers[:5]}")
 print(f"  Users: {user_hosts[:5]}")
 
+# Save summary
+topology_data = {
+    'total_hosts': len(state.hosts),
+    'total_subnets': len(state.subnets),
+    'subnets': [str(s) for s in state.subnets.keys()],
+    'routers': routers,
+    'servers': servers,
+    'users': user_hosts
+}
+
+output_path = os.path.join(os.path.dirname(__file__), 'cyborg_topology_seed42.json')
+with open(output_path, 'w') as f:
+    json.dump(topology_data, f, indent=2)
+
+print(f"\nSaved: {output_path}")
