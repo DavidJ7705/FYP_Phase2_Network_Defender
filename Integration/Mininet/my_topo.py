@@ -32,4 +32,4 @@ class MyTopo(Topo):
 
 topos = {'mytopo': (lambda: MyTopo())}
 
-# sudo mn --custom ~/mininet/custom/topo-2sw-2host.py --topo mytopo
+# sudo mn --custom ~/my_topo.py --topo mytopo
