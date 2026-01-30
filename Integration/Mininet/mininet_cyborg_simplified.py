@@ -3,7 +3,7 @@
 
 
 """
-2 switches, 1 server, 2 users
+2 switches, 1 server, 2 users (3 hosts, 1 subnet)
 """
 
 from mininet.topo import Topo
