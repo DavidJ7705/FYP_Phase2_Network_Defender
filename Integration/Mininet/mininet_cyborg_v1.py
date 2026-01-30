@@ -1,5 +1,5 @@
-# mac: venv/bin/python -m Integration.Mininet.mininet_cyborg_simplified
-# windows: .\venv\Scripts\python -m Integration.Mininet.mininet_cyborg_simplified
+# mac: venv/bin/python -m Integration.Mininet.mininet_cyborg_v1
+# windows: .\venv\Scripts\python -m Integration.Mininet.mininet_cyborg_v1
 
 
 """
@@ -32,4 +32,4 @@ class CybORGSimplifiedTopo(Topo):
 
 topos = {'cyborg_simplified': (lambda: CybORGSimplifiedTopo())}
 
-# sudo mn --custom ~/mininet_cyborg_simplified.py --topo cyborg_simplified
+# sudo mn --custom ~/mininet_cyborg_v1.py --topo cyborg_simplified
