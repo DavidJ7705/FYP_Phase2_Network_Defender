@@ -10,7 +10,7 @@ from mininet.topo import Topo
 
 
 class CybORGSimplifiedTopo(Topo):
-    
+    """CybORG topology v1 - Simple baseline"""
     def __init__(self):
         # Initialize topology
         Topo.__init__(self)
