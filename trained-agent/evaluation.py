@@ -7,6 +7,8 @@ from joblib import Parallel, delayed
 
 from CybORG import CybORG, CYBORG_VERSION
 from CybORG.Agents import SleepAgent, EnterpriseGreenAgent, FiniteStateRedAgent
+from CybORG.Agents.SimpleAgents.RandomSelectRedAgent import RandomSelectRedAgent
+from CybORG.Agents.SimpleAgents.ConstantAgent import SleepAgent as SleepRedAgent
 from CybORG.Simulator.Scenarios import EnterpriseScenarioGenerator
 
 from datetime import datetime
@@ -97,7 +99,7 @@ def evaluate_one_episode(cyborg, wrapped_cyborg, agent, write_to_file, i,tot):
     total_reward = sum(r)
     return total_reward, a, o
 
-def run_evaluation_parallel(submission, log_path, max_eps=100, write_to_file=False, seed=None, workers=32):
+def run_evaluation_parallel(submission, log_path, max_eps=100, write_to_file=False, seed=None, workers=32, red_agent_class = FiniteStateRedAgent):
     cyborg_version = CYBORG_VERSION
     EPISODE_LENGTH = 500
     scenario = "Scenario4"
@@ -110,7 +112,7 @@ def run_evaluation_parallel(submission, log_path, max_eps=100, write_to_file=Fal
         sg = EnterpriseScenarioGenerator(
             blue_agent_class=SleepAgent,
             green_agent_class=EnterpriseGreenAgent,
-            red_agent_class=FiniteStateRedAgent,
+            red_agent_class=red_agent_class,
             steps=EPISODE_LENGTH,
         )
         cyborg = CybORG(sg, "sim", seed=seed)
@@ -204,7 +206,7 @@ def run_evaluation_parallel(submission, log_path, max_eps=100, write_to_file=Fal
             scores.write(f"reward_mean: {reward_mean}\n")
             scores.write(f"reward_stdev: {reward_stdev}\n")
 
-def run_evaluation(submission, log_path, max_eps=100, write_to_file=False, seed=None):
+def run_evaluation(submission, log_path, max_eps=100, write_to_file=False, seed=None, red_agent_class = FiniteStateRedAgent):
     cyborg_version = CYBORG_VERSION
     EPISODE_LENGTH = 500
     scenario = "Scenario4"
@@ -215,7 +217,7 @@ def run_evaluation(submission, log_path, max_eps=100, write_to_file=False, seed=
     sg = EnterpriseScenarioGenerator(
         blue_agent_class=SleepAgent,
         green_agent_class=EnterpriseGreenAgent,
-        red_agent_class=FiniteStateRedAgent,
+        red_agent_class=red_agent_class,
         steps=EPISODE_LENGTH,
     )
     cyborg = CybORG(sg, "sim", seed=seed)
@@ -368,9 +370,24 @@ if __name__ == "__main__":
     parser.add_argument(
         '--log', action='store_true', help="Save detailed logs of actions and observations"
     )
+
+    parser.add_argument("--red-agent", type=str, default="FiniteStateRedAgent",
+        choices=['FiniteStateRedAgent', 'RandomSelectRedAgent', 'SleepRedAgent'],
+        help="Appends timestamp to output_path"
+    )
+
     args = parser.parse_args()
+    RED_AGENTS = {
+        'FiniteStateRedAgent':FiniteStateRedAgent, 
+        'RandomSelectRedAgent': RandomSelectRedAgent, 
+        'SleepRedAgent': SleepRedAgent
+    }
+    red_agent_class = RED_AGENTS[args.red_agent]
+
     args.output_path = os.path.abspath('tmp')
     args.submission_path = os.path.abspath('')
+
+
 
     if not args.output_path.endswith("/"):
         args.output_path += "/"
@@ -384,9 +401,9 @@ if __name__ == "__main__":
 
     if args.distribute == 1:
         run_evaluation(
-            submission, max_eps=args.max_eps, log_path=args.output_path, seed=args.seed, write_to_file=args.log
+            submission, max_eps=args.max_eps, log_path=args.output_path, seed=args.seed, write_to_file=args.log, red_agent_class = red_agent_class
         )
     else:
         run_evaluation_parallel(
-            submission, max_eps=args.max_eps, log_path=args.output_path, seed=args.seed, workers=args.distribute, write_to_file=args.log
+            submission, max_eps=args.max_eps, log_path=args.output_path, seed=args.seed, workers=args.distribute, write_to_file=args.log, red_agent_class = red_agent_class
         )
