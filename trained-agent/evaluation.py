@@ -384,16 +384,15 @@ if __name__ == "__main__":
     }
     red_agent_class = RED_AGENTS[args.red_agent]
 
-    args.output_path = os.path.abspath('tmp')
+    run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    args.output_path = os.path.abspath(f"tmp/{args.red_agent}_{run_id}")
+
     args.submission_path = os.path.abspath('')
 
 
 
     if not args.output_path.endswith("/"):
         args.output_path += "/"
-
-    if args.append_timestamp:
-        args.output_path += time.strftime("%Y%m%d_%H%M%S") + "/"
 
     rmkdir(args.output_path)
 
