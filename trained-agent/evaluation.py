@@ -206,6 +206,12 @@ def run_evaluation_parallel(submission, log_path, max_eps=100, write_to_file=Fal
             scores.write(f"reward_mean: {reward_mean}\n")
             scores.write(f"reward_stdev: {reward_stdev}\n")
 
+        with open(log_path + "episode_rewards.csv", "w") as ep_f:
+            ep_f.write("episode,reward\n")
+            for idx, rew in enumerate(total_reward):
+                ep_f.write(f"{idx},{rew}\n")
+
+
 def run_evaluation(submission, log_path, max_eps=100, write_to_file=False, seed=None, red_agent_class = FiniteStateRedAgent):
     cyborg_version = CYBORG_VERSION
     EPISODE_LENGTH = 500
@@ -347,6 +353,12 @@ def run_evaluation(submission, log_path, max_eps=100, write_to_file=False, seed=
         with open(log_path + "scores.txt", "w") as scores:
             scores.write(f"reward_mean: {reward_mean}\n")
             scores.write(f"reward_stdev: {reward_stdev}\n")
+        
+        with open(log_path + "episode_rewards.csv", "w") as ep_f:
+            ep_f.write("episode,reward\n")
+            for idx, rew in enumerate(total_reward):
+                ep_f.write(f"{idx},{rew}\n")
+
 
 
 if __name__ == "__main__":
@@ -385,7 +397,7 @@ if __name__ == "__main__":
     red_agent_class = RED_AGENTS[args.red_agent]
 
     run_id = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    args.output_path = os.path.abspath(f"tmp/{args.red_agent}_{run_id}")
+    args.output_path = os.path.abspath(f"tmp/{args.red_agent}/{run_id}")
 
     args.submission_path = os.path.abspath('')
 
