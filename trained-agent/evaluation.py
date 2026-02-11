@@ -23,17 +23,7 @@ EPISODE_LENGTH = 500
 
 def rmkdir(path: str):
     """Recursive mkdir"""
-    partial_path = ""
-    for p in path.split("/"):
-        partial_path += p + "/"
-
-        if os.path.exists(partial_path):
-            if os.path.isdir(partial_path):
-                continue
-            if os.path.isfile(partial_path):
-                raise RuntimeError(f"Cannot create {partial_path} (exists as file).")
-
-        os.mkdir(partial_path)
+    os.makedirs(path, exist_ok=True)
 
 
 def load_submission(source: str):
