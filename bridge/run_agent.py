@@ -1,5 +1,5 @@
 from network_monitor import ContainerlabMonitor
-from graph_builder import ObservationGraphBuilder  # Reverted to working version
+from graph_builder import ObservationGraphBuilder  # Pads to 86 nodes, ~172 edges
 from action_executor import ActionExecutor
 from agent_adapter import AgentAdapter
 import os
@@ -49,19 +49,37 @@ def test_full_loop():
     action_ok = False
     agent_decided = False
 
-    # Run defense loop
-    for step in range(10):
+    # State tracking for dynamic simulation
+    compromised_hosts = {'web-server'}  # Start with web-server compromised
+    candidates = ['web-server', 'database', 'admin-ws', 'public-web']
+
+    # Run defense loop (extended to 15 steps to show dynamics)
+    for step in range(15):
         logger.info(f"\n{'='*60}")
-        logger.info(f"STEP {step + 1}/10")
+        logger.info(f"STEP {step + 1}/15")
         logger.info(f"{'='*60}")
+
+        # 0. Simulate Dynamic Attacks
+        if step > 0 and step % 3 == 0:
+            target = random.choice(candidates)
+            compromised_hosts.add(target)
+            logger.info(f"🔥 ATTACK SIMULATION: Attacker compromised {target}!")
+            
+        logger.info(f"   ⚠️  Current Compromised Hosts: {list(compromised_hosts)}")
 
         # 1. OBSERVE: Get current network state
         logger.info("📊 Observing network state...")
         state = monitor.get_network_state()
         container_names = [c["name"] for c in state["containers"]]
-        logger.info(f"   Found {len(state['containers'])} containers")
-        for c in state["containers"]:
-            logger.info(f"     - {c['name']}: {c['ip']}")
+        
+        # Inject compromise status into state for graph builder
+        # This makes the "Super Compromised" flags dynamic!
+        for c in state['containers']:
+            if c['name'] in compromised_hosts:
+                c['is_compromised'] = True
+            else:
+                c['is_compromised'] = False
+
         monitor_ok = True
 
         # 2. CONVERT: Build observation graph
@@ -107,14 +125,19 @@ def test_full_loop():
         if result["success"]:
             logger.info(f"   ✅ {result['message']}")
             action_ok = True
+            
+            # Dynamic Response: clear compromise if Restored
+            if action_type == "Restore" and target in compromised_hosts:
+                compromised_hosts.remove(target)
+                logger.info(f"   🛡️  SUCCESS: {target} has been cleaned and is no longer compromised!")
         else:
             logger.error(f"   ❌ {result.get('error', 'Unknown error')}")
 
         steps_completed += 1
 
         # Wait before next step
-        logger.info(f"\n⏳ Waiting 5 seconds before next step...")
-        time.sleep(5)
+        logger.info(f"\n⏳ Waiting 2 seconds before next step...")
+        time.sleep(2)
 
     logger.info(f"\n{'='*60}")
     logger.info("INTEGRATION TEST COMPLETE!")

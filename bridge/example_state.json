@@ -1,44 +1,43 @@
 {
-  "timestamp": "2026-02-13T12:24:53.062476",
+  "timestamp": "2026-02-13T14:26:24.376306",
   "containers": [
-    {
-      "name": "attacker",
-      "full_name": "clab-fyp-defense-network-attacker",
-      "ip": "172.20.20.5",
-      "status": "running",
-      "image": "fyp-attacker:latest"
-    },
     {
       "name": "web-server",
       "full_name": "clab-fyp-defense-network-web-server",
-      "ip": "172.20.20.8",
+      "ip": "172.20.20.7",
       "status": "running",
       "image": "nginx:alpine"
     },
     {
       "name": "database",
       "full_name": "clab-fyp-defense-network-database",
-      "ip": "172.20.20.6",
+      "ip": "172.20.20.5",
       "status": "running",
       "image": "postgres:alpine"
     },
     {
+      "name": "attacker",
+      "full_name": "clab-fyp-defense-network-attacker",
+      "ip": "172.20.20.6",
+      "status": "running",
+      "image": "fyp-attacker:latest"
+    },
+    {
       "name": "admin-ws",
       "full_name": "clab-fyp-defense-network-admin-ws",
-      "ip": "172.20.20.2",
+      "ip": "172.20.20.8",
       "status": "running",
       "image": "alpine:latest"
     },
     {
       "name": "public-web",
       "full_name": "clab-fyp-defense-network-public-web",
-      "ip": "172.20.20.7",
+      "ip": "172.20.20.2",
       "status": "running",
       "image": "fyp-public-web:latest"
     }
   ],
   "processes": {
-    "attacker": [],
     "web-server": [
       {
         "pid": "1",
@@ -86,7 +85,7 @@
         "command": "nginx: worker process"
       },
       {
-        "pid": "56",
+        "pid": "632",
         "user": "root",
         "command": "ps aux"
       }
@@ -98,51 +97,52 @@
         "command": "postgres"
       },
       {
-        "pid": "64",
+        "pid": "65",
         "user": "postgres",
         "command": "postgres: io worker 0"
       },
       {
-        "pid": "65",
+        "pid": "66",
         "user": "postgres",
         "command": "postgres: io worker 1"
       },
       {
-        "pid": "66",
+        "pid": "67",
         "user": "postgres",
         "command": "postgres: io worker 2"
       },
       {
-        "pid": "67",
+        "pid": "68",
         "user": "postgres",
         "command": "postgres: checkpointer"
       },
       {
-        "pid": "68",
+        "pid": "69",
         "user": "postgres",
         "command": "postgres: background writer"
       },
       {
-        "pid": "70",
+        "pid": "71",
         "user": "postgres",
         "command": "postgres: walwriter"
       },
       {
-        "pid": "71",
+        "pid": "72",
         "user": "postgres",
         "command": "postgres: autovacuum launcher"
       },
       {
-        "pid": "72",
+        "pid": "73",
         "user": "postgres",
         "command": "postgres: logical replication launcher"
       },
       {
-        "pid": "73",
+        "pid": "527",
         "user": "root",
         "command": "ps aux"
       }
     ],
+    "attacker": [],
     "admin-ws": [
       {
         "pid": "1",
@@ -150,7 +150,7 @@
         "command": "/bin/sh"
       },
       {
-        "pid": "13",
+        "pid": "407",
         "user": "root",
         "command": "ps aux"
       }
@@ -163,28 +163,28 @@
       },
       {
         "pid": "root",
-        "user": "19",
+        "user": "447",
         "command": "ps aux"
       }
     ]
   },
   "connections": {
-    "attacker": [
-      "47590"
-    ],
     "web-server": [
-      "44845",
-      "80"
+      "80",
+      "35673"
     ],
     "database": [
-      "5432",
-      "45617"
+      "40017",
+      "5432"
+    ],
+    "attacker": [
+      "44545"
     ],
     "admin-ws": [
-      "43963"
+      "44487"
     ],
     "public-web": [
-      "39385"
+      "51188"
     ]
   }
 }

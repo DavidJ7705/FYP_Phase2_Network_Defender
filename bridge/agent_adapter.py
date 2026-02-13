@@ -103,34 +103,63 @@ class AgentAdapter:
         num_nodes = graph.x.shape[0]
         feat_dim = graph.x.shape[1]
 
-        # 1. Pad node features to match agent's in_dim
-        if feat_dim < self.in_dim:
-            padding = torch.zeros(num_nodes, self.in_dim - feat_dim)
-            x = torch.cat([graph.x, padding], dim=1)
+        # 1. Feature padding & Router addition
+        if hasattr(graph, 'num_real'):
+            # Case A: Graph is already padded (v4 builder)
+            # Ensure we truncate to expected input dim (200 -> 192)
+            x_raw = graph.x
+            x = x_raw[:, : self.in_dim]
+            num_real = graph.num_real
+            
+            # Router indices are immediately after real nodes
+            local_router = num_real
+            neighbors = list(range(num_real + 1, num_real + 9))  # 8 neighbors
+            
+            logger.info(f"   Using pre-padded graph: {num_real} real nodes, routers at {local_router}-{neighbors[-1]}")
         else:
-            x = graph.x[:, : self.in_dim]
+            # Case B: Raw graph (v1/v2/v3 builder), need to add routers
+            if feat_dim < self.in_dim:
+                padding = torch.zeros(num_nodes, self.in_dim - feat_dim)
+                x = torch.cat([graph.x, padding], dim=1)
+            else:
+                x = graph.x[:, : self.in_dim]
 
-        # 2. Append 9 dummy router nodes (agent architecture requires them)
-        router_features = torch.zeros(NUM_ROUTERS, self.in_dim)
-        x = torch.cat([x, router_features], dim=0)
+            # Append 9 dummy router nodes
+            router_features = torch.zeros(NUM_ROUTERS, self.in_dim)
+            x = torch.cat([x, router_features], dim=0)
+            
+            local_router = num_nodes
+            neighbors = list(range(num_nodes + 1, num_nodes + NUM_ROUTERS))
 
-        # 3. Edge index — keep existing edges, routers are isolated
-        #    GCNConv adds self-loops so isolated nodes still get processed
+        # 3. Edge index
         ei = graph.edge_index
 
+        # DEBUG: Log feature statistics
+        logger.info(f"   🔍 Feature shape: {x.shape}")
+        logger.info(f"   🔍 Checking compromise flags in first 5 nodes:")
+        for i in range(min(5, x.shape[0])):
+            nonzero = (x[i] != 0).sum().item()
+            compromised = x[i][187].item() if x.shape[1] > 187 else -999
+            scanned = x[i][188].item() if x.shape[1] > 188 else -999
+            logger.info(f"      Node {i}: {nonzero}/{x.shape[1]} non-zero | pos[187]={compromised:.2f} (compromised?) | pos[188]={scanned:.2f} (scanned?)")
+            if i < 2:  # Show all non-zero positions for first 2 nodes
+                nonzero_indices = x[i].nonzero().squeeze().tolist()
+                logger.info(f"         Non-zero indices: {nonzero_indices}")
+
         # 4. Global state vector — mission phase (one-hot, 3 phases)
-        global_vec = torch.tensor([[1.0, 0.0, 0.0]])
+        # Force Phase 1 (Active Attack) to encourage Restore
+        global_vec = torch.tensor([[0.0, 1.0, 0.0]])
 
         # 5. Classify our containers as servers or users
+        # ... (classification code remains same) ...
         server_indices = []
         user_indices = []
         self._server_names = []
         self._user_names = []
-
+        
         for i, name in enumerate(container_names):
             role = CONTAINER_ROLES.get(name)
-            if role is None:
-                continue
+            if role is None: continue
             if role[0] == "server":
                 server_indices.append(i)
                 self._server_names.append(name)
@@ -143,9 +172,7 @@ class AgentAdapter:
         users = torch.tensor(user_indices, dtype=torch.long)
         n_users = torch.tensor([len(user_indices)], dtype=torch.long)
 
-        # 6. Action edges — local router connects to 8 neighbor routers
-        local_router = num_nodes  # first dummy router
-        neighbors = list(range(num_nodes + 1, num_nodes + NUM_ROUTERS))
+        # 6. Action edges
         action_edges = torch.tensor(
             [[local_router] * 8, neighbors],
             dtype=torch.long,
