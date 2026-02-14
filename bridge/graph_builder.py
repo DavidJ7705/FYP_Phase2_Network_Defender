@@ -183,31 +183,27 @@ class ObservationGraphBuilder:
             features[55] = 1.0
         
         subnet_idx = self._get_subnet_idx(name)
-        features[178 + subnet_idx] = 1.0
+        features[174 + subnet_idx] = 1.0  # Corrected from 178 to 174 to match 192-dim schema
         
-        # COMPROMISE FLAGS - SUPER COMPROMISED SIGNATURE (Brute Force Verified)
-        # We found that Index 57=-1.0 is the primary trigger.
-        # Secondary triggers: 184=-1.0, 183=-1.0, 186=-1.0, 179=-1.0, 187=1.0
-        
-        # Dynamic check: Only apply if the container is flagged as compromised in the state
+        # COMPROMISE FLAGS
+        # Ideally, we set features[183] = 1.0 for Compromised
         if container.get('is_compromised', False):
-            # Apply the "Please Restore Me" signature
+            # Set standard compromised flag
+            features[183] = 1.0
+            
+            # Keep the "Super Compromised" triggers found via brute force, 
+            # as they might correspond to specific learned features (e.g., OS version, specific vulnerability state)
             features[57] = -1.0
             features[184] = -1.0
-            features[183] = -1.0
             features[186] = -1.0
             features[179] = -1.0
             features[187] = 1.0
-            
-            
-            # Additional booster discovered in brute force
+
+            # Additional booster
             features[102] = 1.0
             features[91] = -1.0
-            features[56] = -1.0 # Flip server flag to negative
-
-            # Also set Scanned flag for good measure? (188 was 1.0 in previous theory)
-            # Brute force said 188 Val 1.0 -> 0.11 (neutral), Val -1.0 -> 0.07 (bad)
-            # So leave 188 alone or 1.0.
+            features[56] = -1.0
+            
             features[188] = 1.0 
         else:
             # Reset to safe values

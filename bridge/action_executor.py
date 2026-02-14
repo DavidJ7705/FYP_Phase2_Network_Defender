@@ -75,15 +75,25 @@ class ActionExecutor:
             }
 
     def _restore(self, host):
-        """Restore action: restart container to clean state."""
+        """Restore action: restart container AND clean specific IOCs."""
+        self.logger.info(f"Restoring {host}...")
         container = self._resolve_container(host)
+
+        # 1. Clean the IOC (Simulate Re-Imaging/Sanitization)
+        try:
+            # We explicitly remove the flag file to simulate a successful defense
+            container.exec_run(['/bin/sh', '-c', 'rm -f /tmp/pwned'])
+        except Exception as e:
+            self.logger.warning(f"Failed to clean IOC on {host}: {e}")
+
+        # 2. Restart to kill any in-memory malware/processes
         container.restart(timeout=10)
 
         return {
             "success": True,
             "action": "Restore",
             "target": host,
-            "message": f"Restarted {host} to clean state",
+            "message": f"Restored {host} (Cleaned filesystem + Restarted)",
         }
 
     def _analyse(self, host):

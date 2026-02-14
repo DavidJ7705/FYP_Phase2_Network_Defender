@@ -1,11 +1,17 @@
+
 from network_monitor import ContainerlabMonitor
 from graph_builder import ObservationGraphBuilder  # Pads to 86 nodes, ~172 edges
 from action_executor import ActionExecutor
-from agent_adapter import AgentAdapter
-import os
-import time
-import random
 import logging
+import time
+import torch
+import os
+import sys
+
+
+
+from agent_adapter import AgentAdapter
+import random
 
 logging.basicConfig(
     level=logging.INFO,
@@ -49,36 +55,41 @@ def test_full_loop():
     action_ok = False
     agent_decided = False
 
-    # State tracking for dynamic simulation
-    compromised_hosts = {'web-server'}  # Start with web-server compromised
-    candidates = ['web-server', 'database', 'admin-ws', 'public-web']
+    # Initialize Adversary and Detector
+    from intrusion_detection import IntrusionDetector
+    from red_agent import RedAgent
+    
+    detector = IntrusionDetector()
+    red_team = RedAgent(['web-server', 'database', 'admin-ws', 'public-web'])
 
-    # Run defense loop (extended to 15 steps to show dynamics)
-    for step in range(15):
+    # Run defense loop (extended to 20 steps for a good battle)
+    for step in range(20):
         logger.info(f"\n{'='*60}")
-        logger.info(f"STEP {step + 1}/15")
+        logger.info(f"STEP {step + 1}/20")
         logger.info(f"{'='*60}")
 
-        # 0. Simulate Dynamic Attacks
-        if step > 0 and step % 3 == 0:
-            target = random.choice(candidates)
-            compromised_hosts.add(target)
-            logger.info(f"🔥 ATTACK SIMULATION: Attacker compromised {target}!")
+        # 0. ADVERSARY TURN: Red Agent attempts to attack
+        # Attack with 30% probability each step
+        red_team.attack(probability=0.3)
             
-        logger.info(f"   ⚠️  Current Compromised Hosts: {list(compromised_hosts)}")
-
         # 1. OBSERVE: Get current network state
         logger.info("📊 Observing network state...")
         state = monitor.get_network_state()
         container_names = [c["name"] for c in state["containers"]]
         
-        # Inject compromise status into state for graph builder
-        # This makes the "Super Compromised" flags dynamic!
+        # REAL DETECTION: Check for IOCs
+        compromised_count = 0
         for c in state['containers']:
-            if c['name'] in compromised_hosts:
-                c['is_compromised'] = True
-            else:
-                c['is_compromised'] = False
+            # Check if this container has the flag file
+            is_compromised = detector.check_compromise(c['name'])
+            c['is_compromised'] = is_compromised
+            
+            if is_compromised:
+                compromised_count += 1
+                logger.info(f"   ⚠️  DETECTION ALERT: {c['name']} is COMPROMISED (IOC found)!")
+        
+        if compromised_count == 0:
+            logger.info("   ✅ All systems appear clean.")
 
         monitor_ok = True
 
@@ -125,11 +136,6 @@ def test_full_loop():
         if result["success"]:
             logger.info(f"   ✅ {result['message']}")
             action_ok = True
-            
-            # Dynamic Response: clear compromise if Restored
-            if action_type == "Restore" and target in compromised_hosts:
-                compromised_hosts.remove(target)
-                logger.info(f"   🛡️  SUCCESS: {target} has been cleaned and is no longer compromised!")
         else:
             logger.error(f"   ❌ {result.get('error', 'Unknown error')}")
 
