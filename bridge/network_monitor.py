@@ -6,8 +6,8 @@ CLAB_PREFIX = "clab-fyp-defense-network-"
 
 
 class ContainerlabMonitor:
-    def __init__(self):
-        self.client = docker.from_env()
+    def __init__(self, client=None):
+        self.client = client or docker.from_env()
 
     def get_network_state(self):
         """Collect complete network state from all containerlab containers."""

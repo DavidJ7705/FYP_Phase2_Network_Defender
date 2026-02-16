@@ -1,7 +1,3 @@
-import torch
-from torch_geometric.data import Data
-
-
 class ObservationGraphBuilder:
     """
     Build graph matching CybORG's EXACT structure (86 nodes, ~172 edges)
@@ -14,16 +10,18 @@ class ObservationGraphBuilder:
 
     def build_graph(self, network_state):
         """Create graph with padded structure matching CybORG"""
-        
+        import torch
+        from torch_geometric.data import Data
+
         # Step 1: Create real nodes
         real_nodes = self._create_real_nodes(network_state)
-        
+
         # Step 2: Create dummy nodes to reach 86 total
         all_nodes = self._pad_to_target_size(real_nodes)
-        
+
         # Step 3: Create edges (real + dummy)
         edges = self._create_edges_with_padding(network_state, real_nodes, all_nodes)
-        
+
         return Data(
             x=torch.tensor(all_nodes['features'], dtype=torch.float32),
             edge_index=torch.tensor(edges, dtype=torch.long).t().contiguous(),

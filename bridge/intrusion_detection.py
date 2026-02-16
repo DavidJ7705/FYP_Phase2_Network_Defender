@@ -9,8 +9,8 @@ class IntrusionDetector:
     Current IOC: Presence of '/tmp/pwned' file.
     """
     
-    def __init__(self):
-        self.client = docker.from_env()
+    def __init__(self, client=None):
+        self.client = client or docker.from_env()
 
     def check_compromise(self, container_name):
         """

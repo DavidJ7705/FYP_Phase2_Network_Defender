@@ -31,13 +31,26 @@ CONTAINER_ROLES = {
     "clab-fyp-defense-network-attacker": None,  # external threat — not a defense target
 }
 
-# CAGE4 node action types → our available bridge actions
+# CAGE4 node action types → bridge actions
 # 0=Analyse, 1=Remove, 2=Restore, 3=DeployDecoy
 ACTION_TYPE_MAP = {
     0: "Analyse",
-    1: "Analyse",   # Remove → Analyse (closest equivalent)
+    1: "Remove",
     2: "Restore",
-    3: "Monitor",   # DeployDecoy → Monitor (not available)
+    3: "DeployDecoy",
+}
+
+# Map edge action router indices (0-7) to container-interface pairs
+# CybORG has subnet routers; we map to the actual interfaces in our topology
+ROUTER_TO_INTERFACE = {
+    0: ("web-server", "eth1"),    # Admin zone boundary
+    1: ("web-server", "eth2"),    # Operational zone (database) boundary
+    2: ("web-server", "eth3"),    # Public zone boundary
+    3: ("public-web", "eth1"),    # Public-internal interface
+    4: ("public-web", "eth2"),    # Attacker-facing interface
+    5: ("database", "eth1"),      # Database interface
+    6: ("admin-ws", "eth1"),      # Admin workstation interface
+    7: ("web-server", "eth1"),    # Fallback
 }
 
 
@@ -55,7 +68,7 @@ def _load_agent(weights_path):
     agent.actor.load_state_dict(data["actor"])
     agent.critic.load_state_dict(data["critic"])
     agent.eval()
-    agent.set_deterministic(True)
+    agent.set_deterministic(False)  # Stochastic: sample from policy distribution for action variety
 
     return agent
 
@@ -93,10 +106,11 @@ class AgentAdapter:
         obs = (state, False)  # (state_tuple, is_blocked=False)
 
         action_idx = self.agent.get_action(obs)
-        action_type, target = self._decode_action(action_idx, container_names)
+        decoded = self._decode_action(action_idx, container_names)
 
-        logger.info(f"Agent action index {action_idx} -> {action_type} on {target}")
-        return {"type": action_type, "target": target, "raw_index": action_idx}
+        logger.info(f"Agent action index {action_idx} -> {decoded['type']} on {decoded['target']}")
+        decoded["raw_index"] = action_idx
+        return decoded
 
     def _build_state(self, graph, container_names):
         """Convert our PyG graph into the state tuple the agent expects."""
@@ -193,9 +207,9 @@ class AgentAdapter:
         )
 
     def _decode_action(self, action_idx, container_names):
-        """Map agent's action index (0-80) to (action_type, target_container)."""
+        """Map agent's action index (0-80) to a decision dict."""
         if action_idx is None:
-            return "Monitor", container_names[0]
+            return {"type": "Monitor", "target": container_names[0]}
 
         # Node actions: indices 0-63
         if action_idx < 64:
@@ -216,11 +230,24 @@ class AgentAdapter:
                 else:
                     target = self._user_names[0] if self._user_names else container_names[0]
 
-            return bridge_action, target
+            return {"type": bridge_action, "target": target}
 
-        # Edge actions: indices 64-79 (firewall — not available)
+        # Edge actions: indices 64-79 (AllowTrafficZone / BlockTrafficZone)
         if action_idx < 80:
-            return "Monitor", container_names[0]
+            edge_idx = action_idx - 64  # 0-15
+            action_type_idx = edge_idx // 8  # 0=Allow, 1=Block
+            router_idx = edge_idx % 8  # 0-7
+
+            action_type = "AllowTrafficZone" if action_type_idx == 0 else "BlockTrafficZone"
+            container, interface = ROUTER_TO_INTERFACE.get(
+                router_idx, ("web-server", "eth1")
+            )
+
+            return {
+                "type": action_type,
+                "target": container,
+                "interface": interface,
+            }
 
         # Global action: index 80 (sleep/monitor)
-        return "Monitor", container_names[0]
+        return {"type": "Monitor", "target": container_names[0]}
