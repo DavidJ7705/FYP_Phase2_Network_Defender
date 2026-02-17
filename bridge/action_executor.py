@@ -5,7 +5,7 @@ import random
 from datetime import datetime
 from pathlib import Path
 
-CLAB_PREFIX = "clab-fyp-defense-network-"
+CLAB_PREFIX = "clab-cage4-defense-network-"
 
 # State file for tracking blocked zones and deployed decoys
 STATE_FILE = Path(__file__).parent / "action_state.json"

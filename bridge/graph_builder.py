@@ -1,238 +1,292 @@
 class ObservationGraphBuilder:
     """
-    Build graph matching CybORG's EXACT structure (86 nodes, ~172 edges)
-    by padding with dummy nodes
+    Build graph matching CybORG's router-mediated structure with 9 real routers.
+    Hosts connect only to their subnet routers, routers connect to each other.
     """
 
-    # CybORG's actual structure
-    TARGET_NUM_NODES = 86
-    TARGET_NUM_EDGES = 172
+    def __init__(self):
+        # Import CONTAINER_ROLES to align classification with agent expectations
+        from agent_adapter import CONTAINER_ROLES
+        self.container_roles = CONTAINER_ROLES
 
     def build_graph(self, network_state):
-        """Create graph with padded structure matching CybORG"""
+        """Create graph with router-mediated connectivity"""
         import torch
         from torch_geometric.data import Data
 
-        # Step 1: Create real nodes
-        real_nodes = self._create_real_nodes(network_state)
+        # Step 1: Classify nodes by type
+        servers, users, routers = self._classify_nodes(network_state)
 
-        # Step 2: Create dummy nodes to reach 86 total
-        all_nodes = self._pad_to_target_size(real_nodes)
+        print(f"   Classified: {len(servers)} servers, {len(users)} users, {len(routers)} routers")
 
-        # Step 3: Create edges (real + dummy)
-        edges = self._create_edges_with_padding(network_state, real_nodes, all_nodes)
+        # Step 2: Create features (servers → users → routers)
+        node_features = []
+        node_features.extend([self._encode_server(s) for s in servers])
+        node_features.extend([self._encode_user(u) for u in users])
+        node_features.extend([self._encode_router(r) for r in routers])
+
+        # Step 3: Build router-mediated edges
+        edges = self._build_router_mediated_edges(servers, users, routers)
+
+        # Debug: Check how many nodes have compromised flag set
+        node_features_tensor = torch.tensor(node_features, dtype=torch.float32)
+        compromised_count = (node_features_tensor[:, 183] == 1.0).sum().item()
+        print(f"   Graph: {len(servers) + len(users) + len(routers)} nodes, {len(edges)} edges")
+        print(f"   [GRAPH DEBUG] {compromised_count} nodes have feature[183]=1.0 (compromised flag)")
 
         return Data(
-            x=torch.tensor(all_nodes['features'], dtype=torch.float32),
+            x=torch.tensor(node_features, dtype=torch.float32),
             edge_index=torch.tensor(edges, dtype=torch.long).t().contiguous(),
-            node_type=torch.tensor(all_nodes['types'], dtype=torch.long),
-            num_real=all_nodes['num_real']  # Helps AgentAdapter locate dummy nodes
+            num_servers=len(servers),
+            num_users=len(users),
+            num_routers=len(routers),
         )
 
-    def _create_real_nodes(self, state):
-        """Create actual container/port nodes"""
-        features = []
-        types = []
-        node_map = {}
-        idx = 0
+    def _classify_nodes(self, state):
+        """Separate servers, users, and routers using CONTAINER_ROLES mapping"""
+        servers = []
+        users = []
+        routers = []
 
-        # Containers
         for container in state['containers']:
-            feat = self._encode_system_node_cyborg_style(container)
-            features.append(feat)
-            types.append(0)
-            node_map[container['name']] = idx
-            idx += 1
+            name = container['name'].lower()
 
-        # Ports
-        for container_name, ports in state['connections'].items():
-            if isinstance(ports, list):
-                for port in ports:
-                    feat = self._encode_connection_node_cyborg_style(port)
-                    features.append(feat)
-                    types.append(1)
-                    idx += 1
+            # Remove containerlab prefix if present
+            if 'clab-' in name:
+                name = name.split('clab-')[1]
+                if name.startswith('cage4-defense-network-'):
+                    name = name.replace('cage4-defense-network-', '')
+                elif name.startswith('fyp-defense-network-'):
+                    name = name.replace('fyp-defense-network-', '')
 
-        return {
-            'features': features,
-            'types': types,
-            'node_map': node_map,
-            'count': idx
-        }
+            container['clean_name'] = name
 
-    def _pad_to_target_size(self, real_nodes):
-        """Add dummy nodes to reach 86 nodes total"""
-        features = real_nodes['features'].copy()
-        types = real_nodes['types'].copy()
-        
-        num_real = real_nodes['count']
-        num_dummy = self.TARGET_NUM_NODES - num_real
-        
-        print(f"   Adding {num_dummy} dummy nodes ({num_real} real → {self.TARGET_NUM_NODES} total)")
-        
-        # Add dummy router nodes (positions 0,55,57,178,191 like CybORG routers)
-        for i in range(min(9, num_dummy)):
-            dummy_router = [0.0] * 200
-            dummy_router[0] = 1.0   # SystemNode
-            dummy_router[55] = 1.0  # OS feature
-            dummy_router[57] = 1.0  # OS feature  
-            dummy_router[178] = 1.0 # subnet
-            dummy_router[191] = -1.0 # self message
-            features.append(dummy_router)
-            types.append(0)
-        
-        # Add dummy server/user nodes for remaining slots
-        remaining = num_dummy - 9
-        for i in range(remaining):
-            if i % 2 == 0:  # Server
-                dummy = [0.0] * 200
-                dummy[0] = 1.0
-                dummy[5] = 1.0
-                dummy[24] = 1.0
-                dummy[25] = 1.0
-                dummy[56] = 1.0  # server flag
-                dummy[178 + (i % 9)] = 1.0  # subnet
-                features.append(dummy)
-                types.append(0)
-            else:  # User
-                dummy = [0.0] * 200
-                dummy[0] = 1.0
-                dummy[5] = 1.0
-                dummy[24] = 1.0
-                dummy[25] = 1.0
-                dummy[55] = 1.0  # user flag
-                dummy[178 + (i % 9)] = 1.0  # subnet
-                features.append(dummy)
-                types.append(0)
-        
-        return {
-            'features': features,
-            'types': types,
-            'node_map': real_nodes['node_map'],
-            'num_real': num_real
-        }
+            # Use CONTAINER_ROLES mapping for classification
+            role_info = self.container_roles.get(name)
 
-    def _create_edges_with_padding(self, state, real_nodes, all_nodes):
-        """Create edges matching CybORG's ~172 edges"""
+            if role_info is None:
+                # Routers and excluded hosts (mapped to None)
+                if 'router' in name:
+                    routers.append(container)
+                # Skip root-internet-host and others
+            elif role_info[0] == 'server':
+                servers.append(container)
+            elif role_info[0] == 'user':
+                users.append(container)
+
+        return servers, users, routers
+
+    def _build_router_mediated_edges(self, servers, users, routers):
+        """Create edges: host → router → router → host (no direct host↔host)"""
         edges = []
-        num_real = real_nodes['count']
-        num_total = self.TARGET_NUM_NODES
-        
-        # Real edges (container-to-container, container-to-port)
-        node_map = real_nodes['node_map']
-        num_containers = len(state['containers'])
-        
-        for i in range(num_containers):
-            for j in range(num_containers):
-                if i != j:
-                    edges.append([i, j])
-        
-        connection_idx = num_containers
-        for container_name, ports in state['connections'].items():
-            if isinstance(ports, list) and container_name in node_map:
-                system_idx = node_map[container_name]
-                for port in ports:
-                    edges.append([system_idx, connection_idx])
-                    edges.append([connection_idx, system_idx])
-                    connection_idx += 1
-        
-        # Dummy edges to pad to ~172 edges
-        # Connect dummy nodes to each other in a ring topology
-        current_edge_count = len(edges)
-        needed_edges = self.TARGET_NUM_EDGES - current_edge_count
-        
-        print(f"   Adding ~{needed_edges} dummy edges ({current_edge_count} real → ~{self.TARGET_NUM_EDGES} total)")
-        
-        for i in range(num_real, num_total - 1):
-            if len(edges) >= self.TARGET_NUM_EDGES:
-                break
-            # Ring: connect i to i+1
-            edges.append([i, i + 1])
-            edges.append([i + 1, i])
-        
-        # Connect last dummy to first dummy
-        if len(edges) < self.TARGET_NUM_EDGES and num_total > num_real:
-            edges.append([num_total - 1, num_real])
-            edges.append([num_real, num_total - 1])
-        
-        # Add more cross-connections if still need edges
-        for i in range(num_real, num_total - 2):
-            if len(edges) >= self.TARGET_NUM_EDGES:
-                break
-            edges.append([i, i + 2])
-            edges.append([i + 2, i])
-        
+        num_hosts = len(servers) + len(users)
+
+        # Build mapping from container name to index
+        node_map = {}
+        for i, s in enumerate(servers):
+            node_map[s['clean_name']] = i
+        for i, u in enumerate(users):
+            node_map[u['clean_name']] = num_hosts - len(users) + i
+        for i, r in enumerate(routers):
+            node_map[r['clean_name']] = num_hosts + i
+
+        # 1. Host → Subnet Router (bidirectional)
+        for host in servers + users:
+            router_name = self._get_subnet_router(host['clean_name'])
+            if router_name in node_map:
+                host_idx = node_map[host['clean_name']]
+                router_idx = node_map[router_name]
+                edges.append([host_idx, router_idx])
+                edges.append([router_idx, host_idx])
+
+        # 2. Router → Router (CybORG topology)
+        router_links = self._get_cyborg_router_links()
+        for src_name, dst_names in router_links.items():
+            if src_name in node_map:
+                src_idx = node_map[src_name]
+                for dst_name in dst_names:
+                    if dst_name in node_map:
+                        dst_idx = node_map[dst_name]
+                        edges.append([src_idx, dst_idx])
+
         return edges if edges else [[0, 0]]
 
-    def _encode_system_node_cyborg_style(self, container):
-        """Same as v3 - encode with compromise flags"""
-        features = [0.0] * 200
-        name = container['name'].lower()
-        
-        features[0] = 1.0
-        features[5] = 1.0
-        features[24] = 1.0
-        features[25] = 1.0
-        
-        is_server = ('server' in name or 'web' in name or 'database' in name or 'db' in name)
-        if is_server:
-            features[56] = 1.0
+    def _get_subnet_router(self, hostname):
+        """Get the router name for a given host"""
+        # Extract subnet from hostname
+        # e.g., "restricted-zone-a-server-0" → "restricted-zone-a-router"
+        parts = hostname.split('-')
+
+        # Find where the role (server/user) starts
+        if 'server' in hostname:
+            role_idx = hostname.index('server')
+        elif 'user' in hostname:
+            role_idx = hostname.index('user')
         else:
-            features[55] = 1.0
-        
+            return None
+
+        # Everything before the role + "router"
+        subnet_prefix = hostname[:role_idx].rstrip('-')
+        return f"{subnet_prefix}-router"
+
+    def _get_cyborg_router_links(self):
+        """CybORG's router topology (matches _generate_data_links)"""
+        return {
+            'internet-router': [
+                'restricted-zone-a-router',
+                'restricted-zone-b-router',
+                'contractor-network-router',
+                'public-access-zone-router',
+            ],
+            'restricted-zone-a-router': [
+                'internet-router',
+                'operational-zone-a-router',
+            ],
+            'restricted-zone-b-router': [
+                'internet-router',
+                'operational-zone-b-router',
+            ],
+            'contractor-network-router': [
+                'internet-router',
+            ],
+            'public-access-zone-router': [
+                'internet-router',
+                'admin-network-router',
+                'office-network-router',
+            ],
+            'operational-zone-a-router': [
+                'restricted-zone-a-router',
+            ],
+            'operational-zone-b-router': [
+                'restricted-zone-b-router',
+            ],
+            'admin-network-router': [
+                'public-access-zone-router',
+            ],
+            'office-network-router': [
+                'public-access-zone-router',
+            ],
+        }
+
+    def _encode_server(self, container):
+        """Encode server node with CybORG feature positions"""
+        features = [0.0] * 200
+        name = container['clean_name']
+
+        # Basic flags
+        features[0] = 1.0   # SystemNode
+        features[5] = 1.0   # Known host
+        features[24] = 1.0  # Accessible
+        features[25] = 1.0  # Privileged access
+        features[56] = 1.0  # Server role
+
+        # Subnet encoding
         subnet_idx = self._get_subnet_idx(name)
-        features[174 + subnet_idx] = 1.0  # Corrected from 178 to 174 to match 192-dim schema
-        
-        # COMPROMISE FLAGS
-        # Ideally, we set features[183] = 1.0 for Compromised
-        if container.get('is_compromised', False):
-            # Set standard compromised flag
+        features[174 + subnet_idx] = 1.0
+
+        # Compromise flags
+        is_compromised = container.get('is_compromised', False)
+        if is_compromised:
+            print(f"   [GRAPH DEBUG] Encoding COMPROMISED server {name}: feature[183]=1.0")
+            features[183] = 1.0  # Compromised flag
+            features[57] = -1.0  # Attack indicator
+            features[184] = -1.0
+            features[186] = -1.0
+            features[179] = -1.0
+            features[187] = 1.0
+            features[102] = 1.0
+            features[91] = -1.0
+            features[56] = -1.0  # Override server flag
+            features[188] = 1.0  # Scanned/attacked
+        else:
+            features[57] = 1.0
+            features[184] = 0.0
+            features[183] = 0.0
+            features[186] = 0.0
+            features[179] = 0.0
+            features[187] = 0.0
+
+        return features
+
+    def _encode_user(self, container):
+        """Encode user node with CybORG feature positions"""
+        features = [0.0] * 200
+        name = container['clean_name']
+
+        # Basic flags
+        features[0] = 1.0   # SystemNode
+        features[5] = 1.0   # Known host
+        features[24] = 1.0  # Accessible
+        features[25] = 1.0  # Privileged access
+        features[55] = 1.0  # User role (instead of server)
+
+        # Subnet encoding
+        subnet_idx = self._get_subnet_idx(name)
+        features[174 + subnet_idx] = 1.0
+
+        # Compromise flags (same as server)
+        is_compromised = container.get('is_compromised', False)
+        if is_compromised:
+            print(f"   [GRAPH DEBUG] Encoding COMPROMISED user {name}: feature[183]=1.0")
             features[183] = 1.0
-            
-            # Keep the "Super Compromised" triggers found via brute force, 
-            # as they might correspond to specific learned features (e.g., OS version, specific vulnerability state)
             features[57] = -1.0
             features[184] = -1.0
             features[186] = -1.0
             features[179] = -1.0
             features[187] = 1.0
-
-            # Additional booster
             features[102] = 1.0
             features[91] = -1.0
-            features[56] = -1.0
-            
-            features[188] = 1.0 
+            features[55] = -1.0  # Override user flag
+            features[188] = 1.0
         else:
-            # Reset to safe values
             features[57] = 1.0
-            features[184] = 0.0 # Or 1.0? Inspect said 1.0 usually. 
+            features[184] = 0.0
             features[183] = 0.0
             features[186] = 0.0
             features[179] = 0.0
             features[187] = 0.0
-        
+
         return features
 
-    def _get_subnet_idx(self, container_name):
-        """Map to subnet 0-8"""
-        name = container_name.lower()
-        if 'admin' in name:
+    def _encode_router(self, router):
+        """Match CybORG router encoding exactly"""
+        features = [0.0] * 200
+        name = router['clean_name']
+
+        features[0] = 1.0    # SystemNode
+        features[55] = 1.0   # OS type
+        features[57] = 1.0   # OS version
+        features[178] = 1.0  # Subnet flag
+        features[191] = -1.0 # Self message
+
+        subnet_idx = self._get_router_subnet_idx(name)
+        features[174 + subnet_idx] = 1.0
+
+        return features
+
+    def _get_subnet_idx(self, hostname):
+        """Map hostname to subnet index 0-8"""
+        if 'restricted-zone-a' in hostname:
             return 0
-        elif 'web-server' in name or 'database' in name:
+        elif 'operational-zone-a' in hostname:
             return 1
-        elif 'public' in name:
+        elif 'restricted-zone-b' in hostname:
             return 2
-        elif 'attacker' in name:
+        elif 'operational-zone-b' in hostname:
+            return 3
+        elif 'contractor-network' in hostname:
+            return 4
+        elif 'public-access-zone' in hostname:
+            return 5
+        elif 'admin-network' in hostname:
+            return 6
+        elif 'office-network' in hostname:
+            return 7
+        elif 'internet' in hostname:
             return 8
         else:
-            return 0
+            return 0  # Default
 
-    def _encode_connection_node_cyborg_style(self, port):
-        """Same as v3"""
-        features = [0.0] * 200
-        features[0] = 1.0
-        features[55] = 1.0
-        features[57] = 1.0
-        features[179] = 1.0
-        return features
+    def _get_router_subnet_idx(self, router_name):
+        """Map router name to subnet index 0-8"""
+        return self._get_subnet_idx(router_name)

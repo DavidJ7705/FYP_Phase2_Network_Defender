@@ -39,8 +39,8 @@ def test_full_loop():
     from action_executor import ActionExecutor
     logger.info("Importing intrusion_detection...")
     from intrusion_detection import IntrusionDetector
-    logger.info("Importing red_agent...")
-    from red_agent import RedAgent
+    logger.info("Importing red_agent_cage4...")
+    from red_agent_cage4 import CAGE4RedAgent
 
     # Single shared Docker client for all components
     logger.info("Connecting to Docker daemon...")
@@ -50,7 +50,7 @@ def test_full_loop():
     builder = ObservationGraphBuilder()
     executor = ActionExecutor(client=shared_client)
     detector = IntrusionDetector(client=shared_client)
-    red_team = RedAgent(['web-server', 'database', 'admin-ws', 'public-web'], client=shared_client)
+    red_team = CAGE4RedAgent(client=shared_client)
 
     # Lazy-load torch + agent (heaviest part)
     agent = None
@@ -64,13 +64,24 @@ def test_full_loop():
         logger.error(f"Failed to load agent: {e}")
         logger.info("   Falling back to random decisions\n")
 
-    # Clean all containers before starting (remove stale IOCs from previous runs)
+    # Clean all CAGE4 containers before starting (remove stale IOCs from previous runs)
     logger.info("Cleaning all containers (removing stale IOCs)...")
-    CLAB_PREFIX = "clab-fyp-defense-network-"
-    for host in ['admin-ws', 'web-server', 'database', 'public-web']:
+    CLAB_PREFIX = "clab-cage4-defense-network-"
+    # MINIMAL TOPOLOGY: 6 servers + 10 users = 16 hosts (fits agent capacity)
+    cage4_hosts = [
+        'restricted-zone-a-server-0', 'restricted-zone-a-server-1', 'restricted-zone-a-user-0',
+        'operational-zone-a-server-0', 'operational-zone-a-user-0',
+        'restricted-zone-b-server-0', 'restricted-zone-b-user-0',
+        'operational-zone-b-server-0', 'operational-zone-b-user-0',
+        'contractor-network-server-0', 'contractor-network-user-0', 'contractor-network-user-1',
+        'public-access-zone-user-0',
+        'admin-network-user-0',
+        'office-network-user-0', 'office-network-user-1',
+    ]
+    for host in cage4_hosts:
         try:
             c = shared_client.containers.get(f"{CLAB_PREFIX}{host}")
-            c.exec_run(['/bin/sh', '-c', 'rm -f /tmp/pwned'])
+            c.exec_run(['/bin/sh', '-c', 'rm -f /tmp/pwned /tmp/pwned_root /tmp/exfil_*'])
             logger.info(f"   Cleaned {host}")
         except Exception as e:
             logger.warning(f"   Could not clean {host}: {e}")
@@ -89,9 +100,12 @@ def test_full_loop():
         logger.info(f"STEP {step + 1}/20")
         logger.info(f"{'='*60}")
 
-        # 0. ADVERSARY TURN: Red Agent attempts to attack
-        # Attack with 30% probability each step
-        red_team.attack(probability=0.3)
+        # 0. ADVERSARY TURN: Red Agent attempts FSM transition
+        # Attack every step with 100% probability (for testing visibility)
+        red_team.attack(probability=1.0)
+        # Show red agent's FSM state distribution
+        fsm_summary = red_team.get_fsm_summary()
+        logger.info(f"RED AGENT FSM: K={fsm_summary['K']}, S={fsm_summary['S']}, U={fsm_summary['U']}, R={fsm_summary['R']}")
 
         # 1. OBSERVE: Get current network state
         logger.info("Observing network state...")
@@ -110,7 +124,9 @@ def test_full_loop():
                 logger.info(f"   DETECTION ALERT: {c['name']} is COMPROMISED (IOC found)!")
 
         if compromised_count == 0:
-            logger.info("   All systems appear clean.")
+            logger.info("   All systems appear clean (0/16 compromised).")
+        else:
+            logger.info(f"   ⚠️  {compromised_count}/16 hosts COMPROMISED!")
 
         monitor_ok = True
 

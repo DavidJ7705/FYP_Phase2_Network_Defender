@@ -1,4 +1,71 @@
 {
   "blocked_zones": [],
-  "deployed_decoys": []
+  "deployed_decoys": [
+    {
+      "container": "database",
+      "port": 9567,
+      "pid": "2357",
+      "timestamp": "2026-02-16T20:26:10.279042"
+    },
+    {
+      "container": "database",
+      "port": 9234,
+      "pid": "5183",
+      "timestamp": "2026-02-16T20:47:33.644952"
+    },
+    {
+      "container": "public-web",
+      "port": 9539,
+      "pid": "208",
+      "timestamp": "2026-02-16T20:48:42.589167"
+    },
+    {
+      "container": "operational-zone-a-server-0",
+      "port": 8851,
+      "pid": "2032",
+      "timestamp": "2026-02-16T21:49:18.212380"
+    },
+    {
+      "container": "operational-zone-b-server-0",
+      "port": 8442,
+      "pid": "1571",
+      "timestamp": "2026-02-17T10:56:59.195460"
+    },
+    {
+      "container": "operational-zone-b-server-0",
+      "port": 8793,
+      "pid": "1722",
+      "timestamp": "2026-02-17T10:57:33.698230"
+    },
+    {
+      "container": "operational-zone-a-user-0",
+      "port": 9737,
+      "pid": "933",
+      "timestamp": "2026-02-17T13:31:00.519709"
+    },
+    {
+      "container": "office-network-user-1",
+      "port": 9719,
+      "pid": "6588",
+      "timestamp": "2026-02-17T13:31:03.892693"
+    },
+    {
+      "container": "office-network-user-0",
+      "port": 8015,
+      "pid": "816",
+      "timestamp": "2026-02-17T13:31:07.171300"
+    },
+    {
+      "container": "contractor-network-user-0",
+      "port": 8133,
+      "pid": "2579",
+      "timestamp": "2026-02-17T13:31:55.976456"
+    },
+    {
+      "container": "restricted-zone-a-server-0",
+      "port": 8945,
+      "pid": "194",
+      "timestamp": "2026-02-17T13:31:59.692903"
+    }
+  ]
 }

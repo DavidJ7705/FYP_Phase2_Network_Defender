@@ -1,0 +1,210 @@
+name: cage4-defense-network
+
+topology:
+  nodes:
+    # ========================================================================
+    # INTERNET SUBNET - Entry Point for Red Agent
+    # ========================================================================
+    root-internet-host:
+      kind: linux
+      image: alpine:latest
+      network-mode: container:clab-cage4-defense-network-internet-router
+
+    internet-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    # ========================================================================
+    # RESTRICTED ZONE A - 1 router + 2 servers + 1 user
+    # ========================================================================
+    restricted-zone-a-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    restricted-zone-a-server-0:
+      kind: linux
+      image: alpine:latest
+
+    restricted-zone-a-server-1:
+      kind: linux
+      image: alpine:latest
+
+    restricted-zone-a-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # OPERATIONAL ZONE A - 1 router + 1 server + 1 user
+    # ========================================================================
+    operational-zone-a-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    operational-zone-a-server-0:
+      kind: linux
+      image: alpine:latest
+
+    operational-zone-a-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # RESTRICTED ZONE B - 1 router + 1 server + 1 user
+    # ========================================================================
+    restricted-zone-b-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    restricted-zone-b-server-0:
+      kind: linux
+      image: alpine:latest
+
+    restricted-zone-b-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # OPERATIONAL ZONE B - 1 router + 1 server + 1 user
+    # ========================================================================
+    operational-zone-b-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    operational-zone-b-server-0:
+      kind: linux
+      image: alpine:latest
+
+    operational-zone-b-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # CONTRACTOR NETWORK - 1 router + 1 server + 2 users (red entry point)
+    # ========================================================================
+    contractor-network-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    contractor-network-server-0:
+      kind: linux
+      image: alpine:latest
+
+    contractor-network-user-0:
+      kind: linux
+      image: alpine:latest
+
+    contractor-network-user-1:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # PUBLIC ACCESS ZONE - 1 router + 1 user (no servers to save capacity)
+    # ========================================================================
+    public-access-zone-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    public-access-zone-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # ADMIN NETWORK - 1 router + 1 user
+    # ========================================================================
+    admin-network-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    admin-network-user-0:
+      kind: linux
+      image: alpine:latest
+
+    # ========================================================================
+    # OFFICE NETWORK - 1 router + 2 users
+    # ========================================================================
+    office-network-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+
+    office-network-user-0:
+      kind: linux
+      image: alpine:latest
+
+    office-network-user-1:
+      kind: linux
+      image: alpine:latest
+
+  links:
+    # ========================================================================
+    # INTER-ROUTER LINKS (CybORG topology)
+    # ========================================================================
+
+    # Internet router → External-facing routers
+    - endpoints: ["internet-router:eth1", "restricted-zone-a-router:eth1"]
+    - endpoints: ["internet-router:eth2", "restricted-zone-b-router:eth1"]
+    - endpoints: ["internet-router:eth3", "contractor-network-router:eth1"]
+    - endpoints: ["internet-router:eth4", "public-access-zone-router:eth1"]
+
+    # Restricted Zone A → Operational Zone A
+    - endpoints: ["restricted-zone-a-router:eth2", "operational-zone-a-router:eth1"]
+
+    # Restricted Zone B → Operational Zone B
+    - endpoints: ["restricted-zone-b-router:eth2", "operational-zone-b-router:eth1"]
+
+    # Public Access Zone → Admin and Office Networks
+    - endpoints: ["public-access-zone-router:eth2", "admin-network-router:eth1"]
+    - endpoints: ["public-access-zone-router:eth3", "office-network-router:eth1"]
+
+    # ========================================================================
+    # HOST → ROUTER LINKS (Each host connects ONLY to its subnet router)
+    # ========================================================================
+
+    # Restricted Zone A hosts
+    - endpoints: ["restricted-zone-a-router:eth3", "restricted-zone-a-server-0:eth1"]
+    - endpoints: ["restricted-zone-a-router:eth4", "restricted-zone-a-server-1:eth1"]
+    - endpoints: ["restricted-zone-a-router:eth5", "restricted-zone-a-user-0:eth1"]
+
+    # Operational Zone A hosts
+    - endpoints: ["operational-zone-a-router:eth2", "operational-zone-a-server-0:eth1"]
+    - endpoints: ["operational-zone-a-router:eth3", "operational-zone-a-user-0:eth1"]
+
+    # Restricted Zone B hosts
+    - endpoints: ["restricted-zone-b-router:eth3", "restricted-zone-b-server-0:eth1"]
+    - endpoints: ["restricted-zone-b-router:eth4", "restricted-zone-b-user-0:eth1"]
+
+    # Operational Zone B hosts
+    - endpoints: ["operational-zone-b-router:eth2", "operational-zone-b-server-0:eth1"]
+    - endpoints: ["operational-zone-b-router:eth3", "operational-zone-b-user-0:eth1"]
+
+    # Contractor Network hosts
+    - endpoints: ["contractor-network-router:eth2", "contractor-network-server-0:eth1"]
+    - endpoints: ["contractor-network-router:eth3", "contractor-network-user-0:eth1"]
+    - endpoints: ["contractor-network-router:eth4", "contractor-network-user-1:eth1"]
+
+    # Public Access Zone hosts
+    - endpoints: ["public-access-zone-router:eth4", "public-access-zone-user-0:eth1"]
+
+    # Admin Network hosts
+    - endpoints: ["admin-network-router:eth2", "admin-network-user-0:eth1"]
+
+    # Office Network hosts
+    - endpoints: ["office-network-router:eth2", "office-network-user-0:eth1"]
+    - endpoints: ["office-network-router:eth3", "office-network-user-1:eth1"]
