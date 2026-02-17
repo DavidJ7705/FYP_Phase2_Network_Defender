@@ -20,12 +20,6 @@
       "timestamp": "2026-02-16T20:48:42.589167"
     },
     {
-      "container": "operational-zone-a-server-0",
-      "port": 8851,
-      "pid": "2032",
-      "timestamp": "2026-02-16T21:49:18.212380"
-    },
-    {
       "container": "operational-zone-b-server-0",
       "port": 8442,
       "pid": "1571",
@@ -56,16 +50,34 @@
       "timestamp": "2026-02-17T13:31:07.171300"
     },
     {
-      "container": "contractor-network-user-0",
-      "port": 8133,
-      "pid": "2579",
-      "timestamp": "2026-02-17T13:31:55.976456"
+      "container": "operational-zone-b-user-0",
+      "port": 8978,
+      "pid": "3557",
+      "timestamp": "2026-02-17T13:51:34.684363"
     },
     {
-      "container": "restricted-zone-a-server-0",
-      "port": 8945,
-      "pid": "194",
-      "timestamp": "2026-02-17T13:31:59.692903"
+      "container": "operational-zone-a-user-0",
+      "port": 8118,
+      "pid": "2899",
+      "timestamp": "2026-02-17T13:51:38.999147"
+    },
+    {
+      "container": "operational-zone-a-user-0",
+      "port": 8901,
+      "pid": "3321",
+      "timestamp": "2026-02-17T14:05:39.854591"
+    },
+    {
+      "container": "admin-network-user-0",
+      "port": 9846,
+      "pid": "3793",
+      "timestamp": "2026-02-17T14:11:56.249539"
+    },
+    {
+      "container": "public-access-zone-user-0",
+      "port": 9271,
+      "pid": "4931",
+      "timestamp": "2026-02-17T14:15:35.423138"
     }
   ]
 }

@@ -1,48 +1,46 @@
-"""
-Real-time dashboard for GNN-PPO Network Defense
-Shows network topology, attack progression, and blue agent actions
-"""
+"""FastAPI dashboard for CAGE4 Network Defense — serves HTML + state JSON."""
 import json
-import os
-from flask import Flask, render_template, jsonify
 from datetime import datetime
+from pathlib import Path
 
-app = Flask(__name__)
+from fastapi import FastAPI
+from fastapi.responses import HTMLResponse, JSONResponse
 
-STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
+app = FastAPI()
 
-def get_current_state():
-    """Read the latest state from run_agent.py"""
-    if not os.path.exists(STATE_FILE):
+BRIDGE_DIR = Path(__file__).parent
+STATE_FILE = BRIDGE_DIR / "state.json"
+HTML_FILE  = BRIDGE_DIR / "templates" / "dashboard.html"
+
+
+def read_state() -> dict:
+    if not STATE_FILE.exists():
         return {
-            "step": 0,
-            "red_phase": 0,
-            "red_phase_name": "Idle",
-            "nodes": [],
-            "compromised": [],
-            "last_action": {"type": "Monitor", "target": "-"},
-            "blue_stats": {},
-            "red_log": [],
-            "timestamp": datetime.now().isoformat()
+            "step": 0, "max_steps": 20, "running": False,
+            "node_statuses": {}, "highlighted_nodes": {},
+            "last_blue_action": {"type": "—", "target": "Waiting for agent…"},
+            "last_red_action": {},
+            "red_fsm": {"K": 0, "S": 0, "U": 0, "R": 0},
+            "events": [],
+            "timestamp": datetime.now().isoformat(),
         }
-
     try:
-        with open(STATE_FILE, 'r') as f:
-            return json.load(f)
+        return json.loads(STATE_FILE.read_text())
     except Exception as e:
-        print(f"Error reading state: {e}")
         return {"error": str(e)}
 
-@app.route('/')
-def index():
-    """Main dashboard page"""
-    return render_template('dashboard.html')
 
-@app.route('/api/state')
-def api_state():
-    """API endpoint for current network state"""
-    return jsonify(get_current_state())
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    return HTMLResponse(content=HTML_FILE.read_text())
 
-if __name__ == '__main__':
-    print("Starting dashboard on http://localhost:5000")
-    app.run(debug=True, port=5000, use_reloader=False)
+
+@app.get("/api/state", response_class=JSONResponse)
+async def api_state():
+    return read_state()
+
+
+if __name__ == "__main__":
+    import uvicorn
+    print("Dashboard → http://localhost:5001", flush=True)
+    uvicorn.run(app, host="0.0.0.0", port=5001)

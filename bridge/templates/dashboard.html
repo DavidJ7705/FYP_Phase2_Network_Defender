@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CAGE4 Network Defense</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #0d1117; color: #e6edf3;
+  font-family: 'Segoe UI', monospace;
+  display: flex; flex-direction: column; height: 100vh; overflow: hidden;
+}
+#header {
+  background: #161b22; border-bottom: 1px solid #30363d;
+  padding: 10px 20px; display: flex; align-items: center; gap: 14px;
+  flex-shrink: 0; height: 46px;
+}
+#header h1 { font-size: 15px; font-weight: 600; color: #58a6ff; letter-spacing: 1px; }
+#step-badge {
+  margin-left: auto; background: #21262d; border: 1px solid #30363d;
+  border-radius: 20px; padding: 3px 14px; font-size: 12px; color: #8b949e;
+}
+#step-badge b { color: #58a6ff; }
+#dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  background: #3fb950; box-shadow: 0 0 6px #3fb950;
+  animation: pg 2s infinite;
+}
+@keyframes pg { 0%,100%{opacity:1} 50%{opacity:.35} }
+
+#main { display: flex; flex: 1; overflow: hidden; }
+
+#graph-panel { flex: 1; position: relative; background: #0d1117; }
+#graph-panel svg { position: absolute; top:0; left:0; width:100%; height:100%; }
+
+.link { stroke: #30363d; stroke-width: 1.5; }
+.link.rr { stroke: #484f58; stroke-width: 2; }
+
+.hull { fill-opacity: .07; stroke-opacity: .3; stroke-width: 1.5; stroke-dasharray: 4,3; }
+
+.node { cursor: pointer; }
+.node:hover > * { filter: brightness(1.5); }
+
+.n-router   { fill: #21262d; stroke: #484f58; stroke-width: 1.5; }
+.n-internet { fill: #161b22; stroke: #58a6ff; stroke-width: 2; }
+.n-server   { fill: #1f6feb; stroke: #388bfd; stroke-width: 1.5; }
+.n-user     { fill: #1f6feb; stroke: #388bfd; stroke-width: 1.5; }
+.n-comp     { fill: #da3633; stroke: #f85149; stroke-width: 2; animation: pr 1s infinite; }
+.n-rest     { fill: #1a7f37; stroke: #3fb950; stroke-width: 2; }
+.n-anal     { fill: #6e40c9; stroke: #a371f7; stroke-width: 1.5; }
+.n-decoy    { fill: #9a6700; stroke: #e3b341; stroke-width: 1.5; }
+@keyframes pr { 0%,100%{filter:drop-shadow(0 0 4px #f85149)} 50%{filter:drop-shadow(0 0 14px #f85149)} }
+.flash { animation: pf 1.4s ease-out forwards; }
+@keyframes pf { 0%{filter:drop-shadow(0 0 12px #58a6ff)} 100%{filter:none} }
+
+.nlabel { font-size: 9px; fill: #8b949e; text-anchor: middle; pointer-events: none; }
+.slabel { font-size: 9px; fill: #484f58; text-anchor: middle; pointer-events: none;
+          text-transform: uppercase; letter-spacing: 1px; }
+
+/* Side panel */
+#side { width: 270px; background: #161b22; border-left: 1px solid #30363d;
+        display: flex; flex-direction: column; overflow: hidden; flex-shrink: 0; }
+.sec { border-bottom: 1px solid #21262d; padding: 11px 13px; }
+.sec h3 { font-size: 9px; text-transform: uppercase; letter-spacing: 1px;
+           color: #484f58; margin-bottom: 7px; }
+#sgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.sbox { background: #21262d; border-radius: 5px; padding: 7px; text-align: center; }
+.sbox .v { font-size: 24px; font-weight: bold; line-height: 1; }
+.sbox .l { font-size: 10px; color: #8b949e; margin-top: 2px; }
+.vr{color:#f85149} .vg{color:#3fb950} .vb{color:#58a6ff} .vo{color:#e3b341}
+#fsm-row { display: flex; gap: 4px; }
+.fp { flex:1; text-align:center; border-radius:4px; padding:4px 2px;
+      font-size:11px; font-weight:bold; }
+.fK{background:#21262d;color:#8b949e}
+.fS{background:#2d1f00;color:#e3b341}
+.fU{background:#2d0f0f;color:#f85149}
+.fR{background:#3d0000;color:#ff7b72}
+#act-box { background:#21262d; border-radius:5px; padding:8px 10px; }
+#act-type { font-size:13px; font-weight:bold; color:#58a6ff; }
+#act-tgt  { font-size:11px; color:#8b949e; margin-top:2px; word-break:break-all; }
+#legend { display:flex; flex-direction:column; gap:5px; }
+.lr { display:flex; align-items:center; gap:7px; font-size:11px; color:#8b949e; }
+.ld { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+#evlog { flex:1; overflow-y:auto; padding:8px 13px;
+         scrollbar-width:thin; scrollbar-color:#30363d #161b22; }
+#evlog h3 { font-size:9px; text-transform:uppercase; letter-spacing:1px; color:#484f58;
+             margin-bottom:7px; position:sticky; top:0; background:#161b22; padding:3px 0; }
+.ev { display:flex; gap:6px; margin-bottom:6px; font-size:11px; line-height:1.4; }
+.eb { flex-shrink:0; border-radius:3px; padding:1px 5px; font-size:9px;
+      font-weight:bold; text-transform:uppercase; margin-top:1px; }
+.eb-r{background:#3d0000;color:#f85149} .eb-b{background:#0d1b35;color:#58a6ff}
+.et { color:#8b949e; } .et b { color:#e6edf3; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div id="dot"></div>
+  <h1>CAGE4 NETWORK DEFENSE DASHBOARD</h1>
+  <div id="step-badge">Step <b id="snum">—</b> / <b id="smax">20</b></div>
+</div>
+
+<div id="main">
+  <div id="graph-panel"><svg id="svg"></svg></div>
+
+  <div id="side">
+    <div class="sec">
+      <h3>Network Status</h3>
+      <div id="sgrid">
+        <div class="sbox"><div class="v vr" id="s-comp">0</div><div class="l">Compromised</div></div>
+        <div class="sbox"><div class="v vg" id="s-clean">16</div><div class="l">Clean</div></div>
+        <div class="sbox"><div class="v vo" id="s-decoy">0</div><div class="l">Decoys</div></div>
+        <div class="sbox"><div class="v vb" id="s-step">0</div><div class="l">Step</div></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Red Agent FSM</h3>
+      <div id="fsm-row">
+        <div class="fp fK">K: <span id="fK">0</span></div>
+        <div class="fp fS">S: <span id="fS">0</span></div>
+        <div class="fp fU">U: <span id="fU">0</span></div>
+        <div class="fp fR">R: <span id="fR">0</span></div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Last Blue Action</h3>
+      <div id="act-box">
+        <div id="act-type">—</div>
+        <div id="act-tgt">Waiting for agent…</div>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h3>Legend</h3>
+      <div id="legend">
+        <div class="lr"><div class="ld" style="background:#1f6feb"></div>Server / User (clean)</div>
+        <div class="lr"><div class="ld" style="background:#da3633;border-radius:50%"></div>Compromised (pulsing)</div>
+        <div class="lr"><div class="ld" style="background:#1a7f37"></div>Restored</div>
+        <div class="lr"><div class="ld" style="background:#6e40c9"></div>Analysed</div>
+        <div class="lr"><div class="ld" style="background:#9a6700;border-radius:50%"></div>Decoy</div>
+        <div class="lr"><div class="ld" style="background:#21262d;border-radius:2px"></div>Router</div>
+      </div>
+    </div>
+
+    <div id="evlog">
+      <h3>Event Log</h3>
+      <div id="evc"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Topology ──────────────────────────────────────────────────────────────────
+const NODES = [
+  {id:"internet-router",            kind:"internet", subnet:"inet", label:"Internet"},
+  {id:"restricted-zone-a-router",   kind:"router",   subnet:"rzA",  label:"RZA"},
+  {id:"operational-zone-a-router",  kind:"router",   subnet:"ozA",  label:"OZA"},
+  {id:"restricted-zone-b-router",   kind:"router",   subnet:"rzB",  label:"RZB"},
+  {id:"operational-zone-b-router",  kind:"router",   subnet:"ozB",  label:"OZB"},
+  {id:"contractor-network-router",  kind:"router",   subnet:"ctr",  label:"CTR"},
+  {id:"public-access-zone-router",  kind:"router",   subnet:"pub",  label:"PAZ"},
+  {id:"admin-network-router",       kind:"router",   subnet:"adm",  label:"ADM"},
+  {id:"office-network-router",      kind:"router",   subnet:"off",  label:"OFF"},
+  {id:"restricted-zone-a-server-0", kind:"server",   subnet:"rzA",  label:"RZA-S0"},
+  {id:"restricted-zone-a-server-1", kind:"server",   subnet:"rzA",  label:"RZA-S1"},
+  {id:"operational-zone-a-server-0",kind:"server",   subnet:"ozA",  label:"OZA-S0"},
+  {id:"restricted-zone-b-server-0", kind:"server",   subnet:"rzB",  label:"RZB-S0"},
+  {id:"operational-zone-b-server-0",kind:"server",   subnet:"ozB",  label:"OZB-S0"},
+  {id:"contractor-network-server-0",kind:"server",   subnet:"ctr",  label:"CTR-S0"},
+  {id:"restricted-zone-a-user-0",   kind:"user",     subnet:"rzA",  label:"RZA-U0"},
+  {id:"operational-zone-a-user-0",  kind:"user",     subnet:"ozA",  label:"OZA-U0"},
+  {id:"restricted-zone-b-user-0",   kind:"user",     subnet:"rzB",  label:"RZB-U0"},
+  {id:"operational-zone-b-user-0",  kind:"user",     subnet:"ozB",  label:"OZB-U0"},
+  {id:"contractor-network-user-0",  kind:"user",     subnet:"ctr",  label:"CTR-U0"},
+  {id:"contractor-network-user-1",  kind:"user",     subnet:"ctr",  label:"CTR-U1"},
+  {id:"public-access-zone-user-0",  kind:"user",     subnet:"pub",  label:"PAZ-U0"},
+  {id:"admin-network-user-0",       kind:"user",     subnet:"adm",  label:"ADM-U0"},
+  {id:"office-network-user-0",      kind:"user",     subnet:"off",  label:"OFF-U0"},
+  {id:"office-network-user-1",      kind:"user",     subnet:"off",  label:"OFF-U1"},
+];
+
+const LINKS = [
+  {s:"internet-router",           t:"restricted-zone-a-router",  rr:true},
+  {s:"internet-router",           t:"restricted-zone-b-router",  rr:true},
+  {s:"internet-router",           t:"contractor-network-router",  rr:true},
+  {s:"internet-router",           t:"public-access-zone-router",  rr:true},
+  {s:"restricted-zone-a-router",  t:"operational-zone-a-router",  rr:true},
+  {s:"restricted-zone-b-router",  t:"operational-zone-b-router",  rr:true},
+  {s:"public-access-zone-router", t:"admin-network-router",        rr:true},
+  {s:"public-access-zone-router", t:"office-network-router",       rr:true},
+  {s:"restricted-zone-a-router",  t:"restricted-zone-a-server-0"},
+  {s:"restricted-zone-a-router",  t:"restricted-zone-a-server-1"},
+  {s:"restricted-zone-a-router",  t:"restricted-zone-a-user-0"},
+  {s:"operational-zone-a-router", t:"operational-zone-a-server-0"},
+  {s:"operational-zone-a-router", t:"operational-zone-a-user-0"},
+  {s:"restricted-zone-b-router",  t:"restricted-zone-b-server-0"},
+  {s:"restricted-zone-b-router",  t:"restricted-zone-b-user-0"},
+  {s:"operational-zone-b-router", t:"operational-zone-b-server-0"},
+  {s:"operational-zone-b-router", t:"operational-zone-b-user-0"},
+  {s:"contractor-network-router", t:"contractor-network-server-0"},
+  {s:"contractor-network-router", t:"contractor-network-user-0"},
+  {s:"contractor-network-router", t:"contractor-network-user-1"},
+  {s:"public-access-zone-router", t:"public-access-zone-user-0"},
+  {s:"admin-network-router",      t:"admin-network-user-0"},
+  {s:"office-network-router",     t:"office-network-user-0"},
+  {s:"office-network-router",     t:"office-network-user-1"},
+];
+
+// Relative subnet positions [cx, cy] as fraction of [W, H]
+const SUB_POS = {
+  inet: [0.50, 0.09],
+  rzA:  [0.17, 0.33], ozA: [0.17, 0.67],
+  rzB:  [0.38, 0.33], ozB: [0.38, 0.67],
+  ctr:  [0.62, 0.33],
+  pub:  [0.82, 0.33], adm: [0.74, 0.67], off: [0.92, 0.67],
+};
+const SUB_NAMES = {
+  inet:"Internet", rzA:"Restricted A", ozA:"Operational A",
+  rzB:"Restricted B", ozB:"Operational B", ctr:"Contractor",
+  pub:"Public Access", adm:"Admin", off:"Office"
+};
+const SUB_COLOR = {
+  inet:"#58a6ff",
+  rzA:"#3fb950", ozA:"#3fb950",
+  rzB:"#a371f7", ozB:"#a371f7",
+  ctr:"#f85149",
+  pub:"#e3b341", adm:"#e3b341", off:"#e3b341",
+};
+
+// ── D3 globals ────────────────────────────────────────────────────────────────
+let W, H, svg, g, sim, nodeGs, linkSel, hullSel, labelSel;
+const byId = {};
+
+function nodeClass(n, status) {
+  if (n.kind === "internet") return "n-internet";
+  if (n.kind === "router")   return "n-router";
+  const map = {compromised:"n-comp", restored:"n-rest", analysed:"n-anal", decoy:"n-decoy"};
+  return map[status] || (n.kind === "server" ? "n-server" : "n-user");
+}
+
+function initGraph() {
+  const panel = document.getElementById("graph-panel");
+  W = panel.clientWidth;
+  H = panel.clientHeight;
+
+  svg = d3.select("#svg");
+  svg.attr("viewBox", `0 0 ${W} ${H}`);
+
+  g = svg.append("g");
+  svg.call(d3.zoom().scaleExtent([0.2, 5])
+    .on("zoom", e => g.attr("transform", e.transform)));
+
+  // Build node objects with initial positions near subnet centre
+  NODES.forEach(n => {
+    const [cx, cy] = SUB_POS[n.subnet] || [0.5, 0.5];
+    byId[n.id] = { ...n,
+      x: cx * W + (Math.random() - 0.5) * 70,
+      y: cy * H + (Math.random() - 0.5) * 70,
+      status: "clean",
+    };
+  });
+  const nodes = Object.values(byId);
+  const links = LINKS.map(l => ({ ...l, source: byId[l.s], target: byId[l.t] }));
+
+  // Layers
+  const hullG  = g.append("g");
+  const linkG  = g.append("g");
+  const nodeG  = g.append("g");
+  const labelG = g.append("g");
+
+  // Subnet text labels
+  Object.entries(SUB_POS).forEach(([s, [cx, cy]]) => {
+    labelG.append("text").attr("class","slabel")
+      .attr("x", cx * W).attr("y", cy * H - 36)
+      .text(SUB_NAMES[s] || s);
+  });
+
+  // Links
+  linkSel = linkG.selectAll("line").data(links).join("line")
+    .attr("class", d => d.rr ? "link rr" : "link");
+
+  // Node groups
+  nodeGs = nodeG.selectAll("g.node").data(nodes, d => d.id).join("g")
+    .attr("class", "node")
+    .call(d3.drag()
+      .on("start", (e,d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on("drag",  (e,d) => { d.fx=e.x; d.fy=e.y; })
+      .on("end",   (e,d) => { if (!e.active) sim.alphaTarget(0); d.fx=null; d.fy=null; }));
+
+  // Shapes
+  nodeGs.filter(d => d.kind === "internet" || d.kind === "router")
+    .append("polygon")
+    .attr("class", d => d.kind === "internet" ? "n-internet" : "n-router")
+    .attr("points", d => d.kind === "internet" ? "0,-16 14,0 0,16 -14,0" : "0,-11 9,0 0,11 -9,0");
+
+  nodeGs.filter(d => d.kind === "server")
+    .append("rect")
+    .attr("class", "n-server")
+    .attr("x",-12).attr("y",-8).attr("width",24).attr("height",16).attr("rx",3);
+
+  nodeGs.filter(d => d.kind === "user")
+    .append("circle")
+    .attr("class","n-user").attr("r", 9);
+
+  // Node labels
+  nodeGs.append("text").attr("class","nlabel")
+    .attr("dy", d => (d.kind==="server") ? 22 : 21)
+    .text(d => d.label);
+
+  // Hulls layer placeholder
+  hullSel = hullG.selectAll("path");
+
+  // Simulation
+  sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d=>d.id).distance(d => d.rr ? 95 : 48).strength(0.85))
+    .force("charge", d3.forceManyBody().strength(-130))
+    .force("subnet", () => {
+      nodes.forEach(n => {
+        const [cx, cy] = SUB_POS[n.subnet] || [0.5,0.5];
+        n.vx += (cx*W - n.x) * 0.05;
+        n.vy += (cy*H - n.y) * 0.05;
+      });
+    })
+    .force("collide", d3.forceCollide(18))
+    .alphaDecay(0.025)
+    .on("tick", tick);
+
+  window.addEventListener("resize", () => {
+    const p = document.getElementById("graph-panel");
+    W = p.clientWidth; H = p.clientHeight;
+    svg.attr("viewBox",`0 0 ${W} ${H}`);
+    sim.alpha(0.3).restart();
+  });
+}
+
+function tick() {
+  linkSel
+    .attr("x1", d=>d.source.x).attr("y1", d=>d.source.y)
+    .attr("x2", d=>d.target.x).attr("y2", d=>d.target.y);
+
+  nodeGs.attr("transform", d => `translate(${d.x},${d.y})`);
+
+  // Hulls
+  const groups = {};
+  Object.values(byId).forEach(n => { (groups[n.subnet]||=[]).push([n.x,n.y]); });
+  const hullData = Object.entries(groups)
+    .filter(([,pts]) => pts.length >= 3)
+    .map(([s,pts]) => ({ s, hull: d3.polygonHull(pts), color: SUB_COLOR[s]||"#8b949e" }));
+
+  g.select("g").selectAll("path").data(hullData, d=>d.s).join("path")
+    .attr("class","hull")
+    .attr("fill",  d=>d.color).attr("stroke", d=>d.color)
+    .attr("d", d => d.hull ? "M"+d.hull.join("L")+"Z" : "");
+}
+
+// ── State application ─────────────────────────────────────────────────────────
+const flashTimers = {};
+
+function applyState(state) {
+  const statuses    = state.node_statuses    || {};
+  const highlighted = state.highlighted_nodes || {};
+
+  // Update node visuals
+  nodeGs.each(function(d) {
+    const rawStatus = statuses[d.id] || "clean";
+    const cls = nodeClass(d, rawStatus);
+    const shape = d3.select(this).select("polygon,rect,circle");
+    shape.attr("class", cls);
+    d3.select(this).classed("flash", false);
+    if (highlighted[d.id]) {
+      void this.offsetWidth; // reflow
+      d3.select(this).classed("flash", true);
+      clearTimeout(flashTimers[d.id]);
+      flashTimers[d.id] = setTimeout(() => d3.select(this).classed("flash",false), 1400);
+    }
+  });
+
+  // Stats
+  const comp  = Object.values(statuses).filter(s=>s==="compromised").length;
+  const decoy = Object.values(statuses).filter(s=>s==="decoy").length;
+  document.getElementById("s-comp").textContent = comp;
+  document.getElementById("s-clean").textContent = Math.max(0, 16 - comp - decoy);
+  document.getElementById("s-decoy").textContent = decoy;
+  document.getElementById("s-step").textContent  = state.step || 0;
+  document.getElementById("snum").textContent     = state.step || "—";
+  document.getElementById("smax").textContent     = state.max_steps || 20;
+
+  // FSM
+  const fsm = state.red_fsm || {};
+  ["K","S","U","R"].forEach(k => { document.getElementById("f"+k).textContent = fsm[k]||0; });
+
+  // Last blue action
+  const la = state.last_blue_action;
+  if (la && la.type) {
+    document.getElementById("act-type").textContent = la.type;
+    document.getElementById("act-tgt").textContent  = la.target || "—";
+  }
+
+  // Status dot
+  const dot = document.getElementById("dot");
+  dot.style.background  = comp > 0 ? "#f85149" : "#3fb950";
+  dot.style.boxShadow   = comp > 0 ? "0 0 6px #f85149" : "0 0 6px #3fb950";
+
+  // Events
+  const evs = (state.events||[]).slice().reverse();
+  document.getElementById("evc").innerHTML = evs.map(ev =>
+    `<div class="ev">
+       <span class="eb ${ev.actor==="red"?"eb-r":"eb-b"}">${ev.actor}</span>
+       <span class="et"><b>${ev.type}</b> → ${ev.target} <span style="color:#484f58">[${ev.step}]</span></span>
+     </div>`).join("");
+}
+
+// ── Polling ───────────────────────────────────────────────────────────────────
+async function poll() {
+  try {
+    const r = await fetch("/api/state");
+    if (r.ok) applyState(await r.json());
+  } catch(_) {}
+}
+
+// ── Bootstrap ─────────────────────────────────────────────────────────────────
+// Load D3 dynamically so we control when init runs
+(function loadD3() {
+  const script = document.createElement("script");
+  script.src = "https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js";
+  script.onload = () => {
+    initGraph();
+    poll();
+    setInterval(poll, 2000);
+  };
+  script.onerror = () => {
+    document.getElementById("graph-panel").innerHTML =
+      '<p style="color:#f85149;padding:40px">Failed to load D3.js — check internet connection</p>';
+  };
+  document.head.appendChild(script);
+})();
+</script>
+</body>
+</html>

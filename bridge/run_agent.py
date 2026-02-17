@@ -4,6 +4,8 @@ import time
 import os
 import sys
 import random
+import json
+from datetime import datetime
 
 print("Starting up...", flush=True)
 
@@ -17,6 +19,28 @@ logger = logging.getLogger(__name__)
 WEIGHTS_PATH = os.path.join(
     os.path.dirname(__file__), "..", "trained-agent", "weights", "gnn_ppo-0.pt"
 )
+STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
+
+def write_state(step, max_steps, node_statuses, highlighted_nodes,
+                last_blue_action, last_red_action, red_fsm, events):
+    """Write current simulation state for the dashboard to read."""
+    state = {
+        "step": step,
+        "max_steps": max_steps,
+        "running": True,
+        "node_statuses": node_statuses,
+        "highlighted_nodes": highlighted_nodes,
+        "last_blue_action": last_blue_action,
+        "last_red_action": last_red_action,
+        "red_fsm": red_fsm,
+        "events": events[-20:],  # keep last 20
+        "timestamp": datetime.now().isoformat(),
+    }
+    try:
+        with open(STATE_FILE, "w") as f:
+            json.dump(state, f)
+    except Exception as e:
+        logger.warning(f"Could not write state.json: {e}")
 
 
 def test_full_loop():
@@ -94,6 +118,13 @@ def test_full_loop():
     agent_decided = False
     action_counts = {}
 
+    # Dashboard state tracking
+    node_statuses = {}      # {container_name: "clean"|"compromised"|"decoy"|"restored"|"analysed"}
+    events = []             # rolling event log
+    last_blue_action = {}
+    last_red_action = {}
+    MAX_STEPS = 20
+
     # Run defense loop (extended to 20 steps for a good battle)
     for step in range(20):
         logger.info(f"\n{'='*60}")
@@ -102,10 +133,13 @@ def test_full_loop():
 
         # 0. ADVERSARY TURN: Red Agent attempts FSM transition
         # Attack every step with 100% probability (for testing visibility)
-        red_team.attack(probability=1.0)
+        red_result = red_team.attack(probability=1.0)
         # Show red agent's FSM state distribution
         fsm_summary = red_team.get_fsm_summary()
         logger.info(f"RED AGENT FSM: K={fsm_summary['K']}, S={fsm_summary['S']}, U={fsm_summary['U']}, R={fsm_summary['R']}")
+        if red_result:
+            last_red_action = {"type": red_team.host_states.get(red_result, {}).get("state", "attack"), "target": red_result}
+            events.append({"step": step+1, "actor": "red", "type": "attack", "target": red_result, "time": datetime.now().strftime("%H:%M:%S")})
 
         # 1. OBSERVE: Get current network state
         logger.info("Observing network state...")
@@ -127,6 +161,18 @@ def test_full_loop():
             logger.info("   All systems appear clean (0/16 compromised).")
         else:
             logger.info(f"   ⚠️  {compromised_count}/16 hosts COMPROMISED!")
+
+        # Update node_statuses from detection results
+        for c in state['containers']:
+            name = c['name']
+            # Strip clab prefix
+            for prefix in ["clab-cage4-defense-network-"]:
+                if name.startswith("clab-" ) :
+                    name = name.split("clab-cage4-defense-network-")[-1] if "clab-cage4-defense-network-" in name else name
+            if c.get('is_compromised'):
+                node_statuses[name] = "compromised"
+            elif node_statuses.get(name) not in ("decoy", "restored", "analysed"):
+                node_statuses[name] = "clean"
 
         monitor_ok = True
 
@@ -179,6 +225,37 @@ def test_full_loop():
             action_ok = True
         else:
             logger.error(f"   {result.get('error', 'Unknown error')}")
+
+        # Update node_statuses and events from blue action
+        clean_target = target.replace("clab-cage4-defense-network-", "")
+        action_status_map = {
+            "Restore":          "restored",
+            "Remove":           "clean",
+            "Analyse":          "analysed",
+            "DeployDecoy":      "decoy",
+            "AllowTrafficZone": None,   # router — don't override
+            "BlockTrafficZone": None,
+            "Monitor":          None,
+        }
+        new_status = action_status_map.get(action_type)
+        if new_status and result["success"]:
+            node_statuses[clean_target] = new_status
+        highlighted_nodes = {clean_target: action_type} if new_status else {}
+
+        last_blue_action = {"type": action_type, "target": clean_target, "interface": interface}
+        events.append({"step": step+1, "actor": "blue", "type": action_type, "target": clean_target,
+                        "time": datetime.now().strftime("%H:%M:%S")})
+
+        # Write dashboard state
+        write_state(
+            step=step+1, max_steps=MAX_STEPS,
+            node_statuses=node_statuses,
+            highlighted_nodes=highlighted_nodes,
+            last_blue_action=last_blue_action,
+            last_red_action=last_red_action,
+            red_fsm=fsm_summary,
+            events=events,
+        )
 
         steps_completed += 1
 
