@@ -25,3 +25,15 @@ print(f"ObservationGraph.DIM = {graph_dim}")
 difference = model_input_dimension - graph_dim
 print(f"Extra features added: {difference}")
 print("+5 comes from:\n +2 -> Tabular host feature (compromised, scanned)\n +3 -> Message features (2 message bits + is_received flag)")
+
+for i, label in enumerate(ObservationGraph.FEAT_MAP):
+    print(f"[{i}]{label}")
+
+node_types = ObservationGraph.INV_NTYPES
+node_feature_dim = ObservationGraph.NTYPE_DIMS
+subnets = 9
+graph_additions = 5
+
+dimension = len(node_types) + sum(node_feature_dim) + subnets + graph_additions
+
+print(f"Dimension: {dimension}")
