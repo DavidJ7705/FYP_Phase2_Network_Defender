@@ -9,6 +9,14 @@ NODE_TYPES = {
 
 NUM_ROUTERS = 9
 
+CONTAINER_ROLES ={
+    "admin-ws": ("user", 0),
+    "web-server": ("server", 0),
+    "database": ("server", 1),
+    "public-web": ("server", 2),
+    #maybe attacker one too
+}
+
 class ObservationGraphBuilder:
     def build_graph(self, network_state):
         raise NotImplementedError

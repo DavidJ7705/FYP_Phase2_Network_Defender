@@ -1,6 +1,7 @@
 import torch
 import os, sys
-from graph_builder import FEATURE_DIM, NUM_ROUTERS, ObservationGraphBuilder
+from graph_builder import FEATURE_DIM, NUM_ROUTERS, CONTAINER_ROLES, ObservationGraphBuilder
+from network_monitor import ContainerlabMonitor
 
 WEIGHTS_PATH = os.path.join(
     os.path.dirname(__file__), "..", "trained-agent", "weights", "gnn_ppo-0.pt"
@@ -17,4 +18,23 @@ print(f"FEATURE_DIM (graph builder):{FEATURE_DIM}")
 print(f"Match: {in_dim == FEATURE_DIM}")
 
 builder = ObservationGraphBuilder()
-print(f"\nObservationGraphBuilder instantiated ok i think")
+
+print(f"\nContianer lab role maps")
+try:
+    monitor = ContainerlabMonitor()
+    state = monitor.get_network_state()
+    print(f"Containers found: {len(state['containers'])}")
+except Exception as e:
+    print(f"Monitor failed ({e})")
+    state = None
+
+for role_name, (role_type, slot) in CONTAINER_ROLES.items():
+    print(f"{role_name:20} -> {role_type} slot {slot}")
+
+unmapped = []
+if state:
+    for c in state["containers"]:
+        name = c["name"].replace("clab-fyp-defense-network-", "")
+        if name not in CONTAINER_ROLES:
+            unmapped.append(name)
+    print(f"\nUnmapped (excluded): {unmapped}")
