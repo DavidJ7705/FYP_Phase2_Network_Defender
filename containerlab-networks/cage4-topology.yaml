@@ -2,6 +2,10 @@ name: cage4-defense-network
 
 topology:
   nodes:
+    
+    # ************************************************************************
+    # INTERNET ROUTER
+    # ************************************************************************
     internet-router:
       kind: linux
       image: alpine:latest
@@ -11,7 +15,9 @@ topology:
         - ip route add 10.0.1.0/24 via 10.0.0.2
         - ip route add 10.0.2.0/24 via 10.0.0.2
 
-    # Restricted Zone A
+    # ************************************************************************
+    # RESTRICTED ZONE A
+    # ************************************************************************
     restricted-zone-a-router:
       kind: linux
       image: alpine:latest
@@ -46,7 +52,9 @@ topology:
         - ip addr add 10.0.1.14/30 dev eth1
         - ip route replace default via 10.0.1.13
 
-    # Operational Zone A
+    # ************************************************************************
+    # OPERATIONAL ZONE A
+    # ************************************************************************
     operational-zone-a-router:
       kind: linux
       image: alpine:latest
