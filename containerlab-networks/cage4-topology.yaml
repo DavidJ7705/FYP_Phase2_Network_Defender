@@ -11,10 +11,16 @@ topology:
       image: alpine:latest
       exec:
         - sysctl -w net.ipv4.ip_forward=1
-        - ip addr add 10.0.0.1/30 dev eth1
+        - ip addr add 10.0.0.1/30 dev eth1 # Link to Restricted Zone A Router
+        - ip addr add 10.0.0.5/30 dev eth2 # Link to Restricted Zone B Router
+
+        #Return routes - Zone A
         - ip route add 10.0.1.0/24 via 10.0.0.2
         - ip route add 10.0.2.0/24 via 10.0.0.2
 
+        #Return routes - Zone B
+        - ip route add 10.0.3.0/24 via 10.0.0.6
+        - ip route add 10.0.4.0/24 via 10.0.0.6
     # ************************************************************************
     # RESTRICTED ZONE A
     # ************************************************************************
@@ -79,11 +85,87 @@ topology:
         - ip addr add 10.0.2.6/30 dev eth1
         - ip route replace default via 10.0.2.5
 
+    # ************************************************************************
+    # RESTRICTED ZONE B
+    # ************************************************************************
+    restricted-zone-b-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+        - ip addr add 10.0.0.6/30 dev eth1
+        - ip addr add 10.0.3.1/30 dev eth2
+        - ip addr add 10.0.3.5/30 dev eth3
+        - ip addr add 10.0.3.9/30 dev eth4
+        - ip route replace default via 10.0.0.5
+        - ip route add 10.0.4.0/24 via 10.0.3.2
+
+    restricted-zone-b-server-0:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip addr add 10.0.3.6/30 dev eth1
+        - ip route replace default via 10.0.3.5
+
+    restricted-zone-b-user-0:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip addr add 10.0.3.10/30 dev eth1
+        - ip route replace default via 10.0.3.9
+      
+    # ************************************************************************
+    # OPERATIONAL ZONE B
+    # ************************************************************************
+    operational-zone-b-router:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - sysctl -w net.ipv4.ip_forward=1
+        - ip addr add 10.0.3.2/30 dev eth1
+        - ip addr add 10.0.4.1/30 dev eth2
+        - ip addr add 10.0.4.5/30 dev eth3
+        - ip route replace default via 10.0.3.1
+
+    operational-zone-b-server-0:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip addr add 10.0.4.2/30 dev eth1
+        - ip route replace default via 10.0.4.1
+
+    operational-zone-b-user-0:
+      kind: linux
+      image: alpine:latest
+      exec:
+        - ip addr add 10.0.4.6/30 dev eth1
+        - ip route replace default via 10.0.4.5
+
+
+  # ************************************************************************
+  # LINKS
+  # ************************************************************************
   links:
+    # Internet Router upstream links
     - endpoints: ["internet-router:eth1", "restricted-zone-a-router:eth1"]
+    - endpoints: ["internet-router:eth2", "restricted-zone-b-router:eth1"]
+    
+    # Restricted Zone A links
     - endpoints: ["restricted-zone-a-router:eth2", "operational-zone-a-router:eth1"]
     - endpoints: ["restricted-zone-a-router:eth3", "restricted-zone-a-server-0:eth1"]
     - endpoints: ["restricted-zone-a-router:eth4", "restricted-zone-a-server-1:eth1"]
     - endpoints: ["restricted-zone-a-router:eth5", "restricted-zone-a-user-0:eth1"]
+
+
+    # Operational Zone A links
     - endpoints: ["operational-zone-a-router:eth2", "operational-zone-a-server-0:eth1"]
     - endpoints: ["operational-zone-a-router:eth3", "operational-zone-a-user-0:eth1"]
+
+    # Restricted Zone B links
+    - endpoints: ["restricted-zone-b-router:eth2", "operational-zone-b-router:eth1"]
+    - endpoints: ["restricted-zone-b-router:eth3", "restricted-zone-b-server-0:eth1"]
+    - endpoints: ["restricted-zone-b-router:eth4", "restricted-zone-b-user-0:eth1"]
+    
+    # Operational Zone B links
+    - endpoints: ["operational-zone-b-router:eth2", "operational-zone-b-server-0:eth1"]
+    - endpoints: ["operational-zone-b-router:eth3", "operational-zone-b-user-0:eth1"]
