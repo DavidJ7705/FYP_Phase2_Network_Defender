@@ -28,7 +28,7 @@ except Exception as e:
     print(f"Monitor failed ({e})")
     state = None
 
-for role_name, (role_type, slot) in CONTAINER_ROLES.items():
+for role_name, (role_type, slot, subnet_idx) in CONTAINER_ROLES.items():
     print(f"{role_name:20} -> {role_type} slot {slot}")
 
 unmapped = []
@@ -47,8 +47,8 @@ test_cases = [
     {"name": "admin-ws",   "is_compromised": True},
 ]
 for c in test_cases:
-    role, slot = CONTAINER_ROLES[c["name"]]
-    feature_vector = builder.encode_host(c, role)
+    role, slot, subnet_idx = CONTAINER_ROLES[c["name"]]
+    feature_vector = builder.encode_host(c, role, subnet_idx)
     non_zero = {idx: value for idx, value in enumerate(feature_vector) if value != 0.0}
     status = "COMPROMISED" if c["is_compromised"] else "clean"
     print(f"  {c['name']:20} [{status}]")
