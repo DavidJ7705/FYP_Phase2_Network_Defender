@@ -8,6 +8,8 @@ topology:
       exec:
         - sysctl -w net.ipv4.ip_forward=1
         - ip addr add 10.0.0.1/30 dev eth1
+        - ip route add 10.0.1.0/24 via 10.0.0.2
+        - ip route add 10.0.2.0/24 via 10.0.0.2
 
     # Restricted Zone A
     restricted-zone-a-router:
@@ -21,6 +23,7 @@ topology:
         - ip addr add 10.0.1.9/30 dev eth4
         - ip addr add 10.0.1.13/30 dev eth5
         - ip route replace default via 10.0.0.1
+        - ip route add 10.0.2.0/24 via 10.0.1.2
 
     restricted-zone-a-server-0:
       kind: linux
