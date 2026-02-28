@@ -79,22 +79,24 @@ class ObservationGraphBuilder:
         elif "restricted-zone-b" in clean_name: return 8
         return 0
 
-    # def encode_host(self, container, role, subnet_idx):
-    #     features = [0.0] * FEATURE_DIM
+    def encode_host(self, container, role, subnet_idx):
+        features = [0.0] * FEATURE_DIM
 
-    #     features[14] = 1.0 #ubuntu
-    #     features[24] = 1.0 #linux
+        features[14] = 1.0 #ubuntu
+        features[24] = 1.0 #linux
 
-    #     if role == "server":
-    #         features[56] = 1.0 #server
-    #     else:
-    #         features[55] = 1.0 #user
+        if role == "server":
+            features[56] = 1.0 #server
+        elif role == "router":
+            features[57] = 1.0 #router
+        elif role == "user":
+            features[55] = 1.0 #user
 
-    #     features[178 +subnet_idx] = 1.0
+        features[178 +subnet_idx] = 1.0
 
-    #     if container.get("is_compromised"):
-    #         features[187] = 1.0
-    #         features[188] = 1.0
+        if container.get("is_compromised"):
+            features[187] = 1.0
+            features[188] = 1.0
         
-    #     return features
+        return features
     
