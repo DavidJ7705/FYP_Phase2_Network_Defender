@@ -54,9 +54,20 @@ class ObservationGraphBuilder:
         servers, users, routers = self.classify_node_type(network_state)
         all_nodes = servers + users + routers
         nodes_to_idx = {c["clean_name"]: i for i, c in enumerate(all_nodes)}
-        print(f"Total node count: {len(all_nodes)}")
-        print(f"MAPPINGS: {list(nodes_to_idx.items())}")
 
+
+        #feature matrix construction
+        node_features = []
+        for c in all_nodes:
+            name = c["clean_name"]
+            subnet_idx = self.get_subnet_index(name)
+            role = "router" if name.endswith("-router") else CONTAINER_ROLES[name][0]
+            node_features.append(self.encode_host(c, role, subnet_idx))
+        x = torch.tensor(node_features, dtype = torch.float)
+        
+        # print(f"Total node count: {len(all_nodes)}")
+        # print(f"MAPPINGS: {list(nodes_to_idx.items())}")
+        print(f"Feature matrix shape:{x.shape}")
 
         return None #for now 
 
