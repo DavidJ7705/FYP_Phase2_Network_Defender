@@ -65,9 +65,23 @@ class ObservationGraphBuilder:
             node_features.append(self.encode_host(c, role, subnet_idx))
         x = torch.tensor(node_features, dtype = torch.float)
         
+
+        #Build edge index
+        edge_index = []
+        for c in servers + users:
+            host_idx = nodes_to_idx[c["clean_name"]]
+            subnet_idx = self.get_subnet_index(c["clean_name"])
+            for router in routers:
+                if router["clean_name"] != "internet-router" and self.get_subnet_index(router["clean_name"]) == subnet_idx:
+                    router_idx = nodes_to_idx[router["clean_name"]]
+                    edge_index += [[host_idx, router_idx], [router_idx, host_idx]]
+                    break
+                
         # print(f"Total node count: {len(all_nodes)}")
         # print(f"MAPPINGS: {list(nodes_to_idx.items())}")
         print(f"Feature matrix shape:{x.shape}")
+        print(f"Edge index shape: {len(edge_index)}")
+        print(f"Edge index: {edge_index}")
 
         return None #for now 
 
