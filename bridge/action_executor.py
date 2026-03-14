@@ -5,7 +5,6 @@ from datetime import datetime
 CLAB_PREFIX = "clab-cage4-defense-network-"
 
 MAX_SERVERS = 6
-MAX_USERS = 10
 MAX_HOSTS = 16
 
 ACTION_TYPES ={
@@ -48,9 +47,9 @@ class ActionExecutor:
         print(f"Action: {action_name} on {container_name} (action={action}, host_idx={host_idx})")
 
         if action_name == "Analyse":
-            return self._analyse(servers, users)
-        # elif action_name == "Remove":
-        #     return self._block(servers, users)
+            return self._analyse(full_name, container_name)
+        elif action_name == "Remove":
+            return self._block(full_name, container_name)
         # elif action_name == "Restore":
         #     return self._restore(servers, users)
         # elif action_name == "DeployDecoy":
@@ -62,8 +61,21 @@ class ActionExecutor:
         try:
             container = self.client.containers.get(full_name)
             output = container.exec_run("ps aux").output.decode(errors="replace")
-            print(f"Analyse output for {clean_name}:\n{output[:1000]}")
+            print(f"Analyse {clean_name}:\n{output[:300]}")
             return {"action_type": "Analyse", "target": clean_name, "result": output}
         except Exception as e:
             print(f"Error analysing {clean_name}: {e}")
             return {"action_type": "Analyse", "target": clean_name, "result": f"error: {e}"}
+        
+    def _block(self, full_name, clean_name):
+        try:
+            container = self.client.containers.get(full_name)
+            container.reload()
+            net_names = list(container.attrs["NetworkSettings"]["Networks"].keys())
+            mgmt_network = next((n for n in net_names if n.startswith("clab")), net_names[0])
+            self.client.networks.get(mgmt_network).disconnect(container)
+            print(f"[Executor] Blocked {clean_name} — disconnected from {mgmt_network}")
+            return {"action_type": "Remove", "target": clean_name, "result": "blocked"}
+        except Exception as e:
+            print(f"Error Block failed {clean_name}: {e}")
+            return {"action_type": "Remove", "target": clean_name, "result": f"error: {e}"}
