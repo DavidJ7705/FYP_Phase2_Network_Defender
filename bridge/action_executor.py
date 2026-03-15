@@ -1,6 +1,4 @@
 import docker
-import json
-from datetime import datetime
 
 CLAB_PREFIX = "clab-cage4-defense-network-"
 
@@ -50,13 +48,27 @@ class ActionExecutor:
             return self._analyse(full_name, container_name)
         elif action_name == "Remove":
             return self._block(full_name, container_name)
-        # elif action_name == "Restore":
-        #     return self._restore(servers, users)
+        elif action_name == "Restore":
+            return self._restore(full_name, container_name)
         # elif action_name == "DeployDecoy":
         #     return self._deploy_decoy(servers, users)
         else:
             raise ValueError(f"Unknown action: {action}")
-    
+        
+
+    def _get_mgmt_network(self, container):
+        all_containers = self.client.containers.list()
+        cage4 = [c for c in all_containers
+                 if c.name.startswith(CLAB_PREFIX) and "router" not in c.name
+                 and c.name != container.name]
+        
+        if not cage4:
+            return None
+        ref = cage4[0]
+        ref.reload()
+        ref_nets = list(ref.attrs["NetworkSettings"]["Networks"].keys())
+        return next((n for n in ref_nets if n.startswith("clab")), None)
+
     def _analyse(self, full_name, clean_name):
         try:
             container = self.client.containers.get(full_name)
@@ -79,3 +91,20 @@ class ActionExecutor:
         except Exception as e:
             print(f"Error Block failed {clean_name}: {e}")
             return {"action_type": "Remove", "target": clean_name, "result": f"error: {e}"}
+
+    def _restore(self, full_name, clean_name):
+        try:
+            container = self.client.containers.get(full_name)
+            container.reload()
+            connected = list(container.attrs["NetworkSettings"]["Networks"].keys())
+            mgmt_network = self._get_mgmt_network(container)
+            was_blocked  = mgmt_network and mgmt_network not in connected
+            container.restart()
+            if was_blocked and mgmt_network:
+                self.client.networks.get(mgmt_network).connect(container)
+                print(f"[Executor] Reconnected {clean_name} to {mgmt_network}")
+            print(f"[Executor] Restored {clean_name}")
+            return {"action_type": "Restore", "target": clean_name, "result": "restarted"}
+        except Exception as e:
+            print(f"Error Restore failed {clean_name}: {e}")
+            return {"action_type": "Restore", "target": clean_name, "result": f"error: {e}"}

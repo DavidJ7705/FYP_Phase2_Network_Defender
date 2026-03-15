@@ -14,3 +14,7 @@ sudo ~/fyp-venv-linux/bin/python test_graph_builder.py
 david@S-CY5KSK3:/mnt/c/FYP_Phase2_Network_Defender$ cd containerlab-networks/
 
 david@S-CY5KSK3:/mnt/c/FYP_Phase2_Network_Defender/containerlab-networks$ sudo containerlab deploy -t cage4-topology.yaml --reconfigure
+
+sudo ~/fyp-venv-linux/bin/python watch_containers.py ping restricted-zone-a-server-0
+sudo ~/fyp-venv-linux/bin/python test_docker_action.py
+sudo ~/fyp-venv-linux/bin/python test_action_executor.py
