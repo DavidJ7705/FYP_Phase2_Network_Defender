@@ -1,4 +1,7 @@
 import docker
+import subprocess
+import yaml
+import os
 
 CLAB_PREFIX = "clab-cage4-defense-network-"
 
@@ -108,3 +111,8 @@ class ActionExecutor:
         except Exception as e:
             print(f"Error Restore failed {clean_name}: {e}")
             return {"action_type": "Restore", "target": clean_name, "result": f"error: {e}"}
+
+    def _deploy_decoy(self, full_name, clean_name):
+        # Placeholder for decoy deployment logic
+        print(f"Deploying decoy for {clean_name} (not implemented)")
+        return {"action_type": "DeployDecoy", "target": clean_name, "result": "decoy deployment not implemented"}
