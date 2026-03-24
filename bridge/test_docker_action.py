@@ -8,7 +8,9 @@ Then watch watch_containers.py in Terminal 2 to see the effect.
 """
  
 import docker
- 
+from action_executor import ActionExecutor
+
+
 PREFIX = "clab-cage4-defense-network-"
 client = docker.from_env()
  
@@ -36,6 +38,8 @@ print("  [0] Analyse  — run ps aux inside the container")
 print("  [1] Block    — pause the container (Remove)")
 print("  [2] Restore  — restart the container")
 print("  [3] Unblock  — unpause the container (undo Block)")
+print("  [4] Decoy Deploy  — deploy a honeypot container")
+print("  [5] Decoy Cleanup  — remove a deployed honeypot container")
  
 action = input("\nEnter action number: ").strip()
  
@@ -96,7 +100,22 @@ elif action == "3":
         target.reload()
         print(f"Done. Status: {target.status}")
         print("Management interface restored — ping watcher in Terminal 2 will show REACHABLE.")
- 
+
+elif action == "4":
+    executor = ActionExecutor()
+    result = executor._deploy_decoy(PREFIX + short, short)  # Placeholder for decoy deployment logic
+    print(result)
+
+elif action == "5":
+    import subprocess
+    yaml_path = f"/tmp/decoy_{short}.yaml"
+    result = subprocess.run(["clab", "destroy", "-t", yaml_path], capture_output=True, text=True)
+    if result.returncode == 0:
+        print(f"Decoy for {short} destroyed")
+    else:
+        print(f"Cleanup failed: {result.stderr}")
+
+
 else:
     print("Unknown action.")
  
