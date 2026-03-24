@@ -102,7 +102,6 @@ elif action == "3":
 
 elif action == "4":
     executor = ActionExecutor()
-
     result = executor._deploy_decoy(PREFIX + short, short)  # Placeholder for decoy deployment logic
     print(result)
 else:

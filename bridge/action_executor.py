@@ -18,6 +18,7 @@ ACTION_TYPES ={
 class ActionExecutor:
     def __init__(self):
         self.client = docker.from_env()
+        self._decoys = {}
 
     def execute(self, action, servers, users):
         print(f"Executing action: {action}")
@@ -53,8 +54,8 @@ class ActionExecutor:
             return self._block(full_name, container_name)
         elif action_name == "Restore":
             return self._restore(full_name, container_name)
-        # elif action_name == "DeployDecoy":
-        #     return self._deploy_decoy(servers, users)
+        elif action_name == "DeployDecoy":
+            return self._deploy_decoy(full_name, container_name)
         else:
             raise ValueError(f"Unknown action: {action}")
         
@@ -113,6 +114,44 @@ class ActionExecutor:
             return {"action_type": "Restore", "target": clean_name, "result": f"error: {e}"}
 
     def _deploy_decoy(self, full_name, clean_name):
-        # Placeholder for decoy deployment logic
-        print(f"Deploying decoy for {clean_name} (not implemented)")
-        return {"action_type": "DeployDecoy", "target": clean_name, "result": "decoy deployment not implemented"}
+        if clean_name in self._decoys:
+            print(f"Decoy already deployed for {clean_name}")
+            return {"action_type": "DeployDecoy", "target": clean_name, "result": "decoy already deployed"}
+        try:
+            container = self.client.containers.get(full_name)
+            mgmt_network = self._get_mgmt_network(container)
+            print(f"[DEBUG] mgmt_network = {mgmt_network}")
+
+            topology_name = f"decoy_{clean_name}"
+            topology = {
+                "name": topology_name,
+                "mgmt": {"network": mgmt_network},
+                "topology": {
+                    "nodes": {
+                        "decoy-host": {
+                            "kind": "linux",
+                            "image": "nginx:alpine",
+                        }
+                    }
+                }
+            }
+
+            yaml_path = f"/tmp/{topology_name}.yaml"
+            with open(yaml_path, "w") as f:
+                yaml.dump(topology, f)
+            result = subprocess.run(
+                ["clab", "deploy", "-t", yaml_path],
+                capture_output=True, text=True
+            )
+            if result.returncode == 0:
+                self._decoys[clean_name] = yaml_path
+                print(f"Decoy deployed for {clean_name}")
+                return {"action_type": "DeployDecoy", "target": clean_name, "result": "decoy deployed"}
+            else:
+                print(f"Error deploying decoy for {clean_name}: {result.stderr}")
+                return {"action_type": "DeployDecoy", "target": clean_name, "result": f"error: {result.stderr}"}
+            
+        except Exception as e:
+            print(f"Error preparing decoy deployment for {clean_name}: {e}")
+            return {"action_type": "DeployDecoy", "target": clean_name, "result": f"error: {e}"}
+        

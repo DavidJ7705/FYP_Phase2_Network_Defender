@@ -1,7 +1,7 @@
 network monitor from orbstack
 # 1. Deploy the topology (if not already running)
 cd /mnt/mac/Users/davidjayakumar/Desktop/FYP_PHASE2_NETWORK_DEFENDER/containerlab-networks
-sudo containerlab deploy -t fyp-topology.yaml
+sudo containerlab deploy -t cage4-topology.yaml
 
 # 2. Run the monitor
 cd /mnt/mac/Users/davidjayakumar/Desktop/FYP_PHASE2_NETWORK_DEFENDER/bridge
