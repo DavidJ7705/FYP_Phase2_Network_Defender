@@ -20,3 +20,16 @@ sudo ~/fyp-venv-linux/bin/python test_docker_action.py
 sudo ~/fyp-venv-linux/bin/python test_action_executor.py
 
 davidjayakumar@ubuntu:/mnt/mac/Users/davidjayakumar/Desktop/FYP_PHASE2_NETWORK_DEFENDER/bridge$ watch -n 1 docker ps
+
+
+COrrupting a host
+# Terminal 1 (OrbStack) — plant markers
+docker exec clab-cage4-defense-network-restricted-zone-a-server-0 \
+    touch /tmp/.compromised
+
+docker exec clab-cage4-defense-network-restricted-zone-a-server-0 \
+    touch /root/.compromised
+
+# Verify they exist
+docker exec clab-cage4-defense-network-restricted-zone-a-server-0 \
+    ls /tmp/.compromised /root/.compromised

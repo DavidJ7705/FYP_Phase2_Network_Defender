@@ -76,9 +76,19 @@ class ActionExecutor:
     def _analyse(self, full_name, clean_name):
         try:
             container = self.client.containers.get(full_name)
-            output = container.exec_run("ps aux").output.decode(errors="replace")
-            print(f"Analyse {clean_name}:\n{output[:300]}")
-            return {"action_type": "Analyse", "target": clean_name, "result": output}
+            processes = container.exec_run("ps aux").output.decode(errors="replace")
+            user_compromised = container.exec_run("ls /tmp/.compromised").exit_code == 0
+            root_compromised = container.exec_run("ls /root/.compromised").exit_code == 0
+            print(f"Analyse {clean_name}:\n{processes[:300]}\nUser compromised: {user_compromised}, Root compromised: {root_compromised}")
+            return {
+                "action_type": "Analyse", 
+                "target": clean_name, 
+                "result": {
+                    "processes": processes,
+                    "user_compromised": user_compromised,
+                    "root_compromised": root_compromised
+                }
+            }
         except Exception as e:
             print(f"Error analysing {clean_name}: {e}")
             return {"action_type": "Analyse", "target": clean_name, "result": f"error: {e}"}
