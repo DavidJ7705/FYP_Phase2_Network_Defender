@@ -50,7 +50,7 @@ CONTAINER_ROLES ={
 # [187]  tabular: was_compromised
 
 class ObservationGraphBuilder:
-    def build_graph(self, network_state):
+    def build_graph(self, network_state, compromise_map=None):
         servers, users, routers = self.classify_node_type(network_state)
         all_nodes = servers + users + routers
         nodes_to_idx = {c["clean_name"]: i for i, c in enumerate(all_nodes)}
@@ -61,6 +61,9 @@ class ObservationGraphBuilder:
         self._last_routers      = routers
         self._last_nodes_to_idx = nodes_to_idx
 
+        if compromise_map:
+            for c in all_nodes:
+                c["compromise_level"] = compromise_map.get(c["clean_name"], 0)
 
         #feature matrix construction
         node_features = []
@@ -146,9 +149,10 @@ class ObservationGraphBuilder:
 
         features[178 +subnet_idx] = 1.0
 
-        if container.get("is_compromised"):
+        level = container.get("compromise_level", 0)
+        if level >= 1:
             features[187] = 1.0
-            features[188] = 1.0
+
         
         return features
     

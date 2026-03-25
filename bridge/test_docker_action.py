@@ -40,6 +40,7 @@ print("  [2] Restore  — restart the container")
 print("  [3] Unblock  — unpause the container (undo Block)")
 print("  [4] Decoy Deploy  — deploy a honeypot container")
 print("  [5] Decoy Cleanup  — remove a deployed honeypot container")
+print("  [6] Compromise Cleanup  — remove compromise markers from the container")
  
 action = input("\nEnter action number: ").strip()
  
@@ -113,6 +114,14 @@ elif action == "5":
         print(f"Decoy for {short} destroyed")
     else:
         print(f"Cleanup failed: {result.stderr}")
+
+elif action == "6":
+    print(f"\n[Compromise Cleanup] Removing compromise markers from {short} ...")
+    try:
+        target.exec_run("rm -f /tmp/.compromised && rm -f /root/.compromised")
+        print("Markers removed.")
+    except Exception as e:
+        print(f"Error during cleanup: {e}")
 
 
 else:
