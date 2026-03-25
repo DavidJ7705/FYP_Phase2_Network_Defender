@@ -46,10 +46,9 @@ action = input("\nEnter action number: ").strip()
 # ── Execute ───────────────────────────────────────────────────────────────────
  
 if action == "0":
-    print(f"\n[Analyse] Running ps aux inside {short} ...\n")
-    result = target.exec_run("ps aux")
-    output = result.output.decode(errors="replace")
-    print(output[:1000] if output else "(no output)")
+    executor = ActionExecutor()
+    result = executor._analyse(PREFIX + short, short)  # Placeholder for decoy deployment logic
+    print(result)
  
 elif action == "1":
     # Find the management network name directly from the container's own settings.
