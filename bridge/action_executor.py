@@ -15,6 +15,32 @@ ACTION_TYPES ={
     3: "DeployDecoy",
 }
 
+SUBNET_CIDR = {
+    "admin-network-router": "10.0.7.0/24",
+    "contractor-network-router": "10.0.5.0/24",
+    "office-network-router": "10.0.8.0/24",
+    "operational-zone-a-router": "10.0.2.0/24",
+    "operational-zone-b-router": "10.0.4.0/24",
+    "public-access-zone-router": "10.0.6.0/24",
+    "restricted-zone-a-router": "10.0.1.0/24",
+    "restricted-zone-b-router": "10.0.3.0/24",
+}
+
+SUBNET_GATEWAY = {
+    "admin-network-router": "public-access-zone-router",
+    "contractor-network-router": "internet-router",
+    "office-network-router": "public-access-zone-router",
+    "operational-zone-a-router": "restricted-zone-a-router",
+    "operational-zone-b-router": "restricted-zone-b-router",
+    "public-access-zone-router": "internet-router",
+    "restricted-zone-a-router": "internet-router",
+    "restricted-zone-b-router": "internet-router",
+}
+
+SUBNET_ROUTERS_SORTED = sorted(SUBNET_CIDR.keys())
+
+
+
 class ActionExecutor:
     def __init__(self):
         self.client = docker.from_env()
