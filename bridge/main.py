@@ -13,6 +13,7 @@ adapter = AgentAdapter()
 executor = ActionExecutor()
 detector = IntrusionDetector()
 
+#initial calssification to get red agents container lsit
 state = monitor.get_network_state()
 servers, users, routers = builder.classify_node_type(state)
 containers = servers + users 
@@ -24,15 +25,31 @@ def run(total_steps = MAX_STEPS):
     print(f"Network Defender - Starting @{total_steps} steps per episode\n")
 
     for step in range(total_steps):
+        phase = step //(total_steps//3)
         print(f"Step {step+1}")
 
         #Red agent attacks
         red_action, red_host, red_success = red_agent.step()
         print(f"[RED] {red_action} on {red_host} - status: {red_success}")
 
-        #Intrusion detector scans containers
-        compromises = detector.scan()
 
         #Blue agent observes
         state = monitor.get_network_state()
+        servers, users, routers = builder.classify_node_type(state)
+        all_containers = servers + users
+
+        #Intrusion detector scans containers
+        compromises = detector.scan(all_containers)
+
+        #Blue agent observes - continued
         graph = builder.build_graph(state, compromises)
+
+        #Blue agent acts
+        action_int = adapter.get_action(state, phase)
+        result = executor.execute(action_int, servers, users)
+        print(f"[BLUE] action={action_int} {result['action_type']} on {result['target']} - {result['result']}")
+        print()
+
+
+if __name__ == "__main__":
+    run()
