@@ -1,5 +1,6 @@
 import docker
 import random
+from action_executor import SUBNET_RESTORE_VIA
 
 CLAB_PREFIX = "clab-cage4-defense-network-"
 
@@ -20,6 +21,7 @@ class RedAgent:
     def __init__(self, containers, decoys = None):
         self.client = docker.from_env()
         self.decoys = decoys or {}
+        self.host_ips = {c["clean_name"]: c.get("ip") for c in containers}
 
         self.host_states = {}
         for c in containers:
@@ -103,7 +105,6 @@ class RedAgent:
     
     
     def _execute_action(self, host, action_idx):
-        print(f"Executing action: {action_idx}")
 
         full_name = CLAB_PREFIX + host
         try:
@@ -113,25 +114,58 @@ class RedAgent:
             return False
 
         action_name = ACTION_NAMES[action_idx]
+        print(f"[RED]: {action_name} on {host}")
         
         
         if action_idx == 0: #DiscoverRemoteSystems
-            return True
+            target_ip = random.choice(list(SUBNET_RESTORE_VIA.values()))
+            result = container.exec_run(f"ping -c 1 {target_ip}")
+            return result.exit_code == 0
+        
         elif action_idx == 1: #AggressiveServiceDiscovery
+            target_ip = random.choice([ip for ip in self.host_ips.values() if ip])
+            container.exec_run(f"nc -zv {target_ip} 22 80 443 3306 8080")
             return True
+
+
+
         elif action_idx == 2: #StealthServiceDiscovery
+            target_ip = random.choice([ip for ip in self.host_ips.values() if ip])
+            container.exec_run(f"nc -zv {target_ip} 22 80")
             return True
+
         elif action_idx == 3: #DiscoverDeception
-            return True
+            is_decoy = host in self.decoys
+            print(f"[RED]: decoy = {is_decoy}")
+            return is_decoy
+
         elif action_idx == 4: #ExploitRemoteService
-            return True
+            result = container.exec_run("touch /tmp/.compromised") 
+            return result.exit_code == 0
+
         elif action_idx == 5: #PrivilegeEscalate
-            return True
+            result = container.exec_run("touch /root/.compromised") 
+            return result.exit_code == 0
+        
         elif action_idx == 6: #Impact
+            container.exec_run(
+                "dd if=/dev/zero of=/tmp/junk bs=1M count=5",
+                detach=True
+            )
             return True
+
         elif action_idx == 7: #DegradeServices
+            container.exec_run(
+                "dd if=/dev/zero of=/tmp/degraded bs=1M count=10",
+                detach=True
+            )
             return True
+
+            
         elif action_idx == 8: #Withdraw
+            container.exec_run(
+                "rm -f /tmp/.compormised /root/.compromised /tmp/junk /tmp/degraded"
+            )
             return True
         
         return False
