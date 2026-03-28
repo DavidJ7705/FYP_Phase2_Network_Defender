@@ -4,15 +4,15 @@ import random
 CLAB_PREFIX = "clab-cage4-defense-network-"
 
 ACTION_NAMES = [
-    "DiscoverRemoteSystems",       
-    "AggressiveServiceDiscovery",  
-    "StealthServiceDiscovery",     
-    "DiscoverDeception",           
-    "ExploitRemoteService",        
-    "PrivilegeEscalate",           
-    "Impact",                      
-    "DegradeServices",             
-    "Withdraw"                     
+    "DiscoverRemoteSystems",       #0
+    "AggressiveServiceDiscovery",  #1
+    "StealthServiceDiscovery",     #2
+    "DiscoverDeception",           #3
+    "ExploitRemoteService",        #4
+    "PrivilegeEscalate",           #5
+    "Impact",                      #6
+    "DegradeServices",             #7
+    "Withdraw"                     #8
 ]
 
 
@@ -100,3 +100,38 @@ class RedAgent:
         weights = [w / total for w in weights]
         action_idx = random.choices(indices, weights=weights, k=1)[0]
         return chosen_host,action_idx
+    
+    
+    def _execute_action(self, host, action_idx):
+        print(f"Executing action: {action_idx}")
+
+        full_name = CLAB_PREFIX + host
+        try:
+            container = self.client.containers.get(full_name)
+        except Exception as e:
+            print(f"Error getting container {full_name}: {e}")
+            return False
+
+        action_name = ACTION_NAMES[action_idx]
+        
+        
+        if action_idx == 0: #DiscoverRemoteSystems
+            return True
+        elif action_idx == 1: #AggressiveServiceDiscovery
+            return True
+        elif action_idx == 2: #StealthServiceDiscovery
+            return True
+        elif action_idx == 3: #DiscoverDeception
+            return True
+        elif action_idx == 4: #ExploitRemoteService
+            return True
+        elif action_idx == 5: #PrivilegeEscalate
+            return True
+        elif action_idx == 6: #Impact
+            return True
+        elif action_idx == 7: #DegradeServices
+            return True
+        elif action_idx == 8: #Withdraw
+            return True
+        
+        return False

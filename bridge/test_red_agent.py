@@ -17,4 +17,7 @@ for host, info in agent.host_states.items():
 print("\nCalling _choose_host_and_action 10 times\n")
 for i in range(10):
     host, action_idx = agent._choose_host_and_action()
-    print(f"  Host: {host}  Action: {ACTION_NAMES[action_idx]} ({action_idx})")
+    action_name = ACTION_NAMES[action_idx]
+    success = agent._execute_action(host, action_idx)
+    print(f"Step {i+1}: {action_name} on {host} — success={success}\n")
+
