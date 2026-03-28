@@ -185,3 +185,15 @@ class RedAgent:
         if next_state is not None:
             self.host_states[host]['state'] = next_state
             print(f"[RED] {host} state: {curr_state} > {next_state}")
+
+    def step(self):
+        host, action_idx = self._choose_host_and_action()
+        if host is None:
+            return None, None, None
+        
+        action_name = ACTION_NAMES[action_idx]
+        success = self._execute_action(host, action_idx)
+        self._transition_state(host, action_idx, success)
+
+        return action_name, host, success
+    
