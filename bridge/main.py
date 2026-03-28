@@ -21,11 +21,15 @@ state = monitor.get_network_state()
 servers, users, routers = builder.classify_node_type(state)
 all_containers = servers + users 
 
+#clean up any existing decoys or flags from previous runs
+executor.cleanup_stale_decoys()
+detector.cleanup_flags(all_containers)
+
 red_agent = RedAgent(all_containers, decoys=executor._decoys)
 
 def shutdown(sig, frame):
     print("\nShutting down...")
-    executor.cleanup_decoys()
+    executor.cleanup_stale_decoys()
     detector.cleanup_flags(all_containers)
     sys.exit(0)
 signal.signal(signal.SIGINT, shutdown)
@@ -55,6 +59,10 @@ def run(total_steps = MAX_STEPS):
         result = executor.execute(action_int, servers, users)
         print(f"[BLUE] action={action_int} {result['action_type']} on {result['target']} - {result['result']}")
         print()
+    
+    print("Episode complete. Cleaning up...")
+    executor.cleanup_stale_decoys()
+    detector.cleanup_flags(all_containers)
 
 
 if __name__ == "__main__":
