@@ -24,8 +24,9 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install torch==2.6.0+cpu torch-geometric docker pytest coverage
-               --extra-index-url https://download.pytorch.org/whl/cpu
+        run: |
+          pip install torch==2.6.0+cpu numpy --extra-index-url https://download.pytorch.org/whl/cpu
+          pip install torch-geometric docker pytest coverage pyyaml
 
       - name: Run tests with coverage
         run: |
