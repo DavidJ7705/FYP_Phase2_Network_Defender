@@ -30,7 +30,7 @@ jobs:
       - name: Run tests with coverage
         run: |
           cd bridge
-          python -m coverage run -m pytest . -v
+          python -m coverage run -m pytest tests/ -v
           python -m coverage report
 
       - name: Tear down test topology
