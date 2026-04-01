@@ -69,3 +69,5 @@ clab-*/
 CLAUDE.md
 
 devlog*
+
+**/results/*.csv
