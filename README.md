@@ -1,4 +1,10 @@
-# FYP Phase 2: Network Defender 🛡️
+# FYP Phase 2: Network Defender <img src="assets/LOGO.png" width="40" align="center">
+
+## Demo Video 🎥
+
+[Watch on YouTube](#) *(link to be added)*
+
+---
 
 ## Project Overview 📋
 
@@ -18,6 +24,8 @@ The GNN-PPO agent is based on the [Cybermonic CAGE-4 submission](https://github.
 ---
 
 ## Architecture 🏗️
+
+![Architecture Diagram](assets/architecture_diagram.png)
 
 ```
 Red Agent (bridge/red_agent.py)
@@ -393,6 +401,12 @@ Visualisation scripts:
 - **Edge actions (64–79):** containerlab's Alpine containers don't support `iptables`, so subnet firewall rules use `ip route blackhole` as an approximation
 - **Red agent start state:** bridge red agent starts knowing all hosts (CybORG red starts knowing only the contractor subnet — a known simplification)
 - **Simulation-only features:** CybORG encodes OS version, patch level, and file system metadata in the 192-dim feature vector — these are left as zero in the bridge since there is no real equivalent
+
+---
+
+## Project Poster 🗂️
+
+![Project Poster](assets/poster.png)
 
 ---
 
