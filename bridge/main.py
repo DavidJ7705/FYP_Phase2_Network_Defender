@@ -14,6 +14,15 @@
 #
 # Cleanup (when done):
 #   sudo containerlab destroy -t cage4-topology.yaml
+#
+# Pipeline order:
+#   1. network_monitor    — discovers live containers from containerlab
+#   2. intrusion_detector — scans containers for compromise sentinel files
+#   3. graph_builder      — encodes network state as a 192-dim GNN graph
+#   4. agent_adapter      — runs trained GNN-PPO weights, returns action int (0-80)
+#   5. action_executor    — executes action on live Docker containers
+#   6. red_agent          — simulates attacker FSM via Docker exec_run
+#   7. server             — serves live dashboard at http://localhost:8080
 
 import json
 import os
