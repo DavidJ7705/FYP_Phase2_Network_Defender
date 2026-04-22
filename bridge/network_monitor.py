@@ -1,3 +1,16 @@
+# Discovers all running containerlab containers and classifies them by role.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python network_monitor.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import docker
 import json
 from datetime import datetime

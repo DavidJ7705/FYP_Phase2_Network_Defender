@@ -1,3 +1,14 @@
+# Unit tests for ActionExecutor — Analyse, Block, Restore, DeployDecoy, and subnet firewall actions.
+# DeployDecoy test skipped if containerlab (clab) is not installed.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python -m pytest tests/test_action_executor.py -v
+
 import shutil
 import pytest
 from network_monitor import ContainerlabMonitor

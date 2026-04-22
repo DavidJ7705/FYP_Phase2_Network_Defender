@@ -1,3 +1,17 @@
+# Lightweight HTTP server — serves frontend/index.html at GET / and live state at GET /api/state.
+# Started automatically by main.py; not usually run standalone.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run standalone):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python server.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import os
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer

@@ -1,3 +1,13 @@
+# Unit tests for ContainerlabMonitor — container discovery and role classification.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python -m pytest tests/test_monitor.py -v
+
 from network_monitor import ContainerlabMonitor
 from graph_builder import ObservationGraphBuilder
 

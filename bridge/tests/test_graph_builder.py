@@ -1,3 +1,13 @@
+# Unit tests for ObservationGraphBuilder — 192-dim feature encoding and graph structure.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python -m pytest tests/test_graph_builder.py -v
+
 import os
 import pytest
 import torch

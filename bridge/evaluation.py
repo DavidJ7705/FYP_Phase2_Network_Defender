@@ -1,3 +1,17 @@
+# Runs a full 100-step episode and logs every red/blue action to a CSV in bridge/results/.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   rm -rf __pycache__
+#   sudo ~/fyp-venv-linux/bin/python evaluation.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import csv
 import os
 from datetime import datetime

@@ -1,3 +1,16 @@
+# Builds a PyTorch Geometric graph from live network state (192-dim feature vector per node).
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python graph_builder.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import torch
 from torch_geometric.data import Data
 
