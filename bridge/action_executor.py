@@ -1,3 +1,17 @@
+# Translates agent action integers to real Docker operations on live containers.
+# Actions: 0-63 node actions (Analyse/Block/Restore/DeployDecoy), 64-79 subnet firewall, 80 Monitor.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python action_executor.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import docker
 import subprocess
 import yaml
@@ -181,7 +195,6 @@ class ActionExecutor:
         try:
             container = self.client.containers.get(full_name)
             mgmt_network = self._get_mgmt_network(container)
-            print(f"[DEBUG] mgmt_network = {mgmt_network}")
 
             topology_name = f"decoy_{clean_name}"
             topology = {

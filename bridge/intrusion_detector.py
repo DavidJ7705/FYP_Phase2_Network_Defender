@@ -1,4 +1,18 @@
-import docker 
+# Scans containers for compromise sentinel files planted by the red agent.
+# /tmp/.compromised → user-level (level 1), /root/.compromised → root-level (level 2).
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python intrusion_detector.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
+import docker
 
 CLAB_PREFIX = "clab-cage4-defense-network-"
 

@@ -1,3 +1,14 @@
+# Unit tests for IntrusionDetector — sentinel file detection at user (level 1) and root (level 2).
+# autouse fixture cleans /tmp/.compromised and /root/.compromised before and after each test.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python -m pytest tests/test_intrusion_detector.py -v
+
 import pytest
 import docker
 from network_monitor import ContainerlabMonitor

@@ -1,3 +1,29 @@
+# Full observe-act loop — red attacks, blue defends, dashboard updated each step.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   rm -rf __pycache__
+#   sudo ~/fyp-venv-linux/bin/python main.py
+#
+# Dashboard auto-starts at http://localhost:8080
+# Stop with Ctrl+C — triggers graceful cleanup.
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+#
+# Pipeline order:
+#   1. network_monitor    — discovers live containers from containerlab
+#   2. intrusion_detector — scans containers for compromise sentinel files
+#   3. graph_builder      — encodes network state as a 192-dim GNN graph
+#   4. agent_adapter      — runs trained GNN-PPO weights, returns action int (0-80)
+#   5. action_executor    — executes action on live Docker containers
+#   6. red_agent          — simulates attacker FSM via Docker exec_run
+#   7. server             — serves live dashboard at http://localhost:8080
+
 import json
 import os
 import signal

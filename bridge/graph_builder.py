@@ -1,3 +1,16 @@
+# Builds a PyTorch Geometric graph from live network state (192-dim feature vector per node).
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python graph_builder.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import torch
 from torch_geometric.data import Data
 
@@ -86,9 +99,6 @@ class ObservationGraphBuilder:
                     edge_index += [[host_idx, router_idx], [router_idx, host_idx]]
                     break
 
-        # print(f"Edge index shape: {len(edge_index)}")
-        # print(f"Edge index: {edge_index}")
-
         #connecting subnet routers to internet router
         internet_idx = nodes_to_idx["internet-router"]
         for router in routers:
@@ -96,10 +106,6 @@ class ObservationGraphBuilder:
                 router_idx = nodes_to_idx[router["clean_name"]]
                 edge_index += [[router_idx, internet_idx], [internet_idx, router_idx]]
 
-        # print(f"Total node count: {len(all_nodes)}")
-        # print(f"MAPPINGS: {list(nodes_to_idx.items())}")
-        # print(f"Feature matrix shape:{x.shape}")
-        # print(f"total edges: {len(edge_index)}")
         edge_index = torch.tensor(edge_index, dtype=torch.long).t().contiguous()
         return Data(x=x, edge_index=edge_index)
 

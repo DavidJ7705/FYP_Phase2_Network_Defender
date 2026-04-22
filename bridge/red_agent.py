@@ -1,3 +1,17 @@
+# Simulates the FiniteStateRedAgent FSM on live containers via Docker exec_run.
+# 9 actions mapped to real shell commands (ping, nc, touch, dd, rm).
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python red_agent.py
+#
+# Cleanup (when done):
+#   sudo containerlab destroy -t cage4-topology.yaml
+
 import docker
 import random
 from action_executor import SUBNET_RESTORE_VIA

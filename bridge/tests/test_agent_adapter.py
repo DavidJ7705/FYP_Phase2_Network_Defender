@@ -1,3 +1,14 @@
+# Unit tests for AgentAdapter — weight loading and action selection (0-80).
+# Skipped automatically if trained weights file is not present in the repo.
+#
+# Terminal 1 (deploy topology):
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Terminal 2 (run):
+#   cd ~/Desktop/Network_Defender_FYP/bridge
+#   sudo ~/fyp-venv-linux/bin/python -m pytest tests/test_agent_adapter.py -v
+
 import os
 import pytest
 from network_monitor import ContainerlabMonitor

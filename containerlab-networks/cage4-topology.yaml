@@ -1,3 +1,14 @@
+# CAGE4 Defense Network Topology
+#
+# Deploy:
+#   cd ~/Desktop/Network_Defender_FYP/containerlab-networks
+#   sudo containerlab deploy -t cage4-topology.yaml
+#
+# Destroy:
+#   sudo containerlab destroy -t cage4-topology.yaml
+#
+# Note: topology must be deployed before running any file in bridge/
+
 name: cage4-defense-network
 
 topology:
