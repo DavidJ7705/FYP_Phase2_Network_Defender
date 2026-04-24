@@ -1,0 +1,14 @@
+name: test-network
+
+topology:
+  nodes:
+    alpine1:
+      kind: linux
+      image: alpine:latest
+    
+    ubuntu1:
+      kind: linux
+      image: ubuntu:22.04
+
+  links:
+    - endpoints: ["alpine1:eth1", "ubuntu1:eth1"]

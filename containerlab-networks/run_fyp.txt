@@ -1,0 +1,33 @@
+cd /mnt/mac/Users/davidjayakumar/Desktop/FYP_PHASE2_NETWORK_DEFENDER/containerlab-networks
+sudo containerlab destroy -t fyp-topology.yaml
+sudo containerlab deploy -t fyp-topology.yaml
+
+should get:
+
+╭─────────────────────────────────────┬───────────────────────┬─────────┬───────────────────╮
+│                 Name                │       Kind/Image      │  State  │   IPv4/6 Address  │
+├─────────────────────────────────────┼───────────────────────┼─────────┼───────────────────┤
+│ clab-fyp-defense-network-admin-ws   │ linux                 │ running │ 172.20.20.7       │
+│                                     │ alpine:latest         │         │ 3fff:172:20:20::7 │
+├─────────────────────────────────────┼───────────────────────┼─────────┼───────────────────┤
+│ clab-fyp-defense-network-attacker   │ linux                 │ running │ 172.20.20.5       │
+│                                     │ fyp-attacker:latest   │         │ 3fff:172:20:20::5 │
+├─────────────────────────────────────┼───────────────────────┼─────────┼───────────────────┤
+│ clab-fyp-defense-network-database   │ linux                 │ running │ 172.20.20.8       │
+│                                     │ postgres:alpine       │         │ 3fff:172:20:20::8 │
+├─────────────────────────────────────┼───────────────────────┼─────────┼───────────────────┤
+│ clab-fyp-defense-network-public-web │ linux                 │ running │ 172.20.20.4       │
+│                                     │ fyp-public-web:latest │         │ 3fff:172:20:20::4 │
+├─────────────────────────────────────┼───────────────────────┼─────────┼───────────────────┤
+│ clab-fyp-defense-network-web-server │ linux                 │ running │ 172.20.20.6       │
+│                                     │ nginx:alpine          │         │ 3fff:172:20:20::6 │
+╰─────────────────────────────────────┴───────────────────────┴─────────┴───────────────────╯
+
+
+sudo docker exec clab-fyp-defense-network-admin-ws ping -c 3 10.0.110.1
+sudo docker exec clab-fyp-defense-network-web-server ping -c 3 10.0.198.10
+sudo docker exec clab-fyp-defense-network-web-server ping -c 3 10.0.178.10
+sudo docker exec clab-fyp-defense-network-public-web ping -c 3 10.0.200.10
+
+
+

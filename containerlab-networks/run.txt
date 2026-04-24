@@ -1,0 +1,24 @@
+Simplified Working test
+
+cd /mnt/mac/Users/davidjayakumar/Desktop/FYP_PHASE2_NETWORK_DEFENDER/containerlab-networks
+or
+cd ~/containerlab-test
+
+
+sudo containerlab destroy -t test-topology.yml
+sudo containerlab deploy -t test-topology.yml
+sudo clab inspect -t test-topology.yml
+
+
+Test from alpine1:
+sudo docker exec -it clab-test-network-alpine1 sh
+ping -c 3 172.20.20.3
+exit
+
+Run commands directly:
+sudo docker exec clab-test-network-alpine1 ip addr show
+sudo docker exec clab-test-network-ubuntu1 echo 'Hello from ubuntu1'
+sudo docker exec clab-test-network-ubuntu1 ps aux
+
+Cleanup:
+sudo containerlab destroy -t test-topology.yml
